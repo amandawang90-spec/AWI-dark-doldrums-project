@@ -216,3 +216,11 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# --- project data ---
+# ERA5 / TCo1279 NetCDF and GRIB downloads are large (multi-GB) and are
+# reproducible from the download_era5_*.py scripts. Not tracked.
+data/
+*.nc
+*.grib
+*.grb
