@@ -10,9 +10,11 @@ The work is in two strands:
   (`u10`/`v10`), since TCo1279-DART does not carry a 100 m level. Log-law and
   regression approaches are validated against ERA5, which does have real
   `u100`/`v100`.
-- **[`solar/`](solar/)** — ERA5 downloads and verification for the solar side:
-  cloud cover, top-of-atmosphere and surface radiation, column water vapour.
-  Currently at the data-acquisition and sanity-checking stage.
+- **[`solar/`](solar/)** — reconstructing 3-hourly surface downward shortwave
+  (`ssrd`) from the fields TCo1279-DART does carry 3-hourly (`tsr` plus the four
+  cloud fractions), since the runs write `ssrd` only as a monthly mean. ERA5
+  supplies the training target. The reconstructed irradiance then drives a solar
+  capacity factor.
 
 ## Findings so far
 
@@ -47,9 +49,9 @@ wind/
   FINDINGS.md
 
 solar/
-  download_era5_monthly.py     monthly-mean ssrd/ssrc/tsrc + tcwv
-  download_era5_clouds_3h.py   3-hourly tsr + total/high/medium/low cloud cover
-  check_*.py                   download verification, unit checks, ERA5T flag
+  download_era5.py             every ERA5 field the reconstruction needs, in one
+                               pass; skips what already exists (--list, --force)
+  check_era5.py                completeness, structure and unit-convention checks
 ```
 
 Many scripts have a matching `*.sh` wrapper that loads the environment module
