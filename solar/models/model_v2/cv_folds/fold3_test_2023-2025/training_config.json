@@ -1,0 +1,30 @@
+{
+  "description": "v2: same method as v1 (HistGradientBoostingRegressor, kt=ssrd/tisr), more data",
+  "features": [
+    "T",
+    "tcc",
+    "hcc",
+    "mcc",
+    "lcc",
+    "mu"
+  ],
+  "uses_fal": false,
+  "train_years": "2015-2025",
+  "held_out_years": [
+    2023,
+    2024,
+    2025
+  ],
+  "n_months": 96,
+  "stride": 8,
+  "n_rows": 190056570,
+  "hyperparameters": {
+    "max_iter": 250,
+    "random_state": 0,
+    "other": "sklearn defaults, identical to v1"
+  },
+  "n_iter_used": 250,
+  "sklearn_version": "1.1.1",
+  "trained_at": "2026-09-21 13:08:40",
+  "v1_for_comparison": "models/model_kt.joblib (ERA5 Aug2025, Mar2026, Aug2026; stride 16)"
+}

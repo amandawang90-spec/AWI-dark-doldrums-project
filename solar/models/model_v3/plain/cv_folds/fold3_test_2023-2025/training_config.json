@@ -1,0 +1,17 @@
+{
+ "variant": "plain",
+ "months": "Oct-Feb (ONDJF)",
+ "train_years_excluded": [
+  2023,
+  2024,
+  2025
+ ],
+ "n_months": 40,
+ "rows_used": 32000000,
+ "mask": "lat >= -60 and elevation <= 3000 m",
+ "weights": "none",
+ "max_iter": 250,
+ "n_iter_": 250,
+ "sklearn": "1.1.1",
+ "note": "v1/v2 hyperparameters; rows randomly subsampled (learning curve is flat beyond ~1M rows)"
+}

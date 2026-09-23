@@ -224,3 +224,7 @@ data/
 *.nc
 *.grib
 *.grb
+
+# Over GitHub's 100MB hard file-size limit; regenerate via
+# solar/scripts/evaluation/evaluate_v2_cv.py.
+solar/models/model_v2/evaluation/raw_results.pkl
