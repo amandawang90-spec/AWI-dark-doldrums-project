@@ -55,8 +55,6 @@ SOLAR_DIR = f"{_ROOT}/solar/data/era5"
 WIND_DIR = f"{_ROOT}/wind/data/era5/training_data"
 LSM_PATH = f"{_ROOT}/wind/data/era5/era5_lsm_20260830_0000.nc"
 MODEL_PATH = f"{_ROOT}/solar/models/model_v3/area/model_kt_v3.joblib"
-LAND_PATH = f"{_ROOT}/boundaries/land.geojson"
-EEZ_PATH = f"{_ROOT}/boundaries/eez.geojson"
 
 DT_ERA5 = 3600.0          # ERA5 tsr/ssrd/tisr: 1h accumulation
 DAY_MU = 0.02
@@ -65,14 +63,14 @@ KMAX = 1.1
 
 KAPPA, G, NU, ALPHA_CH = 0.4, 9.81, 1.5e-5, 0.018   # same constants as dart_loglaw
 
-WEIGHTS = dict(solar=0.577, onshore=0.369, offshore=0.054)
+WEIGHTS = dict(solar=0.44, onshore=0.50, offshore=0.06)
+# Mockert et al. (2023) sensitivity: their actual 2018 German weights, IRENA (2019) --
+# 44% solar (45.9 GW), 50% onshore (53.0 GW), 6% offshore (6.4 GW) -- as quoted directly
+# from the paper (previous 57.7/36.9/5.4 default was our own 2024 mix, NOT Mockert's).
 
-WINTER_START = int(os.environ.get("GERMANY_WINTER_START", "2007"))
-WINTER_END = int(os.environ.get("GERMANY_WINTER_END", "2025"))
-WINTER_LABELS = range(WINTER_START, WINTER_END + 1)   # OND(Y-1)+JF(Y) per label
+WINTER_LABELS = range(2007, 2026)   # 19 winters: OND(Y-1)+JF(Y)
 MONTHS_OND = [10, 11, 12]
 MONTHS_JF = [1, 2]
-OUT_DIR = os.environ.get("GERMANY_OUT_DIR", f"{_ROOT}/dunkelflaute/data/germany_era5")
 
 
 def box_slices(latlo, lathi, lonlo, lonhi):
@@ -87,53 +85,12 @@ GERMANY_BBOX = dict(latlo=46.75, lathi=56.25, lonlo=2.75, lonhi=15.5)
 LAT_SL, LON_SL = box_slices(**GERMANY_BBOX)
 
 
-def germany_masks(real_boundary=True):
-    """real_boundary=True (default): onshore = ERA5 land cells whose centre falls inside
-    Germany's actual Natural Earth admin_0_countries polygon (1:10m; extracted via cartopy
-    shapereader and cached Germany-only at LAND_PATH), so neighbouring-country
-    (NL/BE/FR/CH/AT/CZ/PL) land slivers in the download box are excluded. Offshore = ERA5
-    ocean cells whose centre falls inside Germany's Exclusive Economic Zone (Marine
-    Regions "eez" layer, which already includes the territorial sea; fetched via the
-    Marine Regions WFS and cached Germany-only at EEZ_PATH) -- so only Germany's actual
-    North Sea/Baltic waters count, not the whole download box's ocean.
-    real_boundary=False: coarse fallback, onshore/offshore = ERA5 land mask intersected
-    with the download BOUNDING BOX only (no country/EEZ polygon test) -- kept only for
-    comparison against the old approximation."""
+def germany_masks():
     ds = xr.open_dataset(LSM_PATH).isel(latitude=LAT_SL, longitude=LON_SL)
     lsm = ds.lsm.squeeze().values  # (nlat, nlon), fraction land 0-1
-    lat, lon = ds.latitude.values, ds.longitude.values
     ds.close()
-    true_land = lsm >= 0.5   # physical land/sea, used for z0 (roughness) regardless of country
-    ocean = ~true_land
-
-    if not real_boundary:
-        return dict(true_land=true_land, onshore=true_land, offshore=ocean)
-
-    import json
-
-    import shapely.geometry as sgeom
-    import shapely.prepared
-
-    with open(LAND_PATH) as f:
-        germany_geom = sgeom.shape(json.load(f)["features"][0]["geometry"])
-    land_prepared = shapely.prepared.prep(germany_geom)
-
-    with open(EEZ_PATH) as f:
-        eez_geom = sgeom.shape(json.load(f)["features"][0]["geometry"])
-    eez_prepared = shapely.prepared.prep(eez_geom)
-
-    lon_signed = np.where(lon > 180, lon - 360, lon)   # Natural Earth / Marine Regions use -180..180
-    onshore = np.zeros(lsm.shape, dtype=bool)
-    offshore = np.zeros(lsm.shape, dtype=bool)
-    for i in range(len(lat)):
-        for j in range(len(lon)):
-            pt = sgeom.Point(lon_signed[j], lat[i])
-            if true_land[i, j]:
-                if land_prepared.contains(pt):
-                    onshore[i, j] = True
-            elif eez_prepared.contains(pt):
-                offshore[i, j] = True
-    return dict(true_land=true_land, onshore=onshore, offshore=offshore)
+    land = lsm >= 0.5
+    return land   # True = onshore, False = offshore
 
 
 def winter_months(label):
@@ -222,13 +179,13 @@ def reconstruct_wind(m, land):
     return u100, v100
 
 
-def month_cf(year, month, model, masks):
+def month_cf(year, month, model, land):
     m = load_month(year, month)
     ssrd_recon, rescale_diag = reconstruct_solar(m, model)
-    u100_recon, v100_recon = reconstruct_wind(m, masks["true_land"])
+    u100_recon, v100_recon = reconstruct_wind(m, land)
 
-    on = masks["onshore"]
-    off = masks["offshore"]
+    on = land
+    off = ~land
 
     def spatial_mean(field2d_series, mask):
         # field: (ntime, nlat, nlon); area-weight by cos(lat)
@@ -258,20 +215,19 @@ def month_cf(year, month, model, masks):
 
 
 _worker_model = None
-_worker_masks = None
-REAL_BOUNDARY = os.environ.get("GERMANY_REAL_BOUNDARY", "1") == "1"
+_worker_land = None
 
 
 def _init_worker():
-    global _worker_model, _worker_masks
+    global _worker_model, _worker_land
     _worker_model = joblib.load(MODEL_PATH)["model"]
-    _worker_masks = germany_masks(real_boundary=REAL_BOUNDARY)
+    _worker_land = germany_masks()
 
 
 def _worker(ym):
     year, month = ym
     t0 = time.time()
-    res = month_cf(year, month, _worker_model, _worker_masks)
+    res = month_cf(year, month, _worker_model, _worker_land)
     return year, month, res, time.time() - t0
 
 
@@ -288,12 +244,9 @@ def main():
     t0 = time.time()
     winters = usable_winters()
     all_ym = sorted({ym for _, months in winters for ym in months})
-    diag_masks = germany_masks(real_boundary=REAL_BOUNDARY)
     print(f"Germany ERA5 combined-CF pipeline: {len(winters)} winters "
           f"({winters[0][0]}-{winters[-1][0]}), {len(all_ym)} month-files, "
-          f"model={MODEL_PATH}, real_boundary={REAL_BOUNDARY} "
-          f"(onshore={diag_masks['onshore'].sum()} cells, offshore={diag_masks['offshore'].sum()} cells, "
-          f"true_land={diag_masks['true_land'].sum()} cells)", flush=True)
+          f"model={MODEL_PATH}", flush=True)
 
     results_by_ym = {}
     with ProcessPoolExecutor(max_workers=4, initializer=_init_worker) as ex:
@@ -378,9 +331,7 @@ def main():
     stats_real = event_stats(roll_real, (series["cf_on_real"], series["cf_off_real"]),
                               series["cf_solar_real"], winter_id, n_winters)
 
-    suffix = "" if REAL_BOUNDARY else "_bboxonly"
-    os.makedirs(OUT_DIR, exist_ok=True)
-    out_path = f"{OUT_DIR}/combined_cf_era5_{WINTER_START}_{WINTER_END}{suffix}.npz"
+    out_path = f"{_ROOT}/dunkelflaute/data/germany_era5/combined_cf_era5_2007_2025_mockertweights.npz"
     np.savez(out_path, **series, cf_combined_recon=cf_combined_recon, cf_combined_real=cf_combined_real,
              roll_recon=roll_recon, roll_real=roll_real)
 
