@@ -1,0 +1,14 @@
+{
+ "variant": "area",
+ "months": "all 12 (2015-2026)",
+ "train_years_excluded": [],
+ "n_months": 136,
+ "rows_used": 32000000,
+ "mask": "lat >= -60 and elevation <= 3000 m",
+ "weights": "cos(lat)",
+ "max_iter": 250,
+ "n_iter_": 250,
+ "sklearn": "1.1.1",
+ "dt_seconds": 10800.0,
+ "note": "true 3-hour-sum ssrd/tsr (era5_3h_mean), DT=10800 matches DART exactly, unlike v1/v2/v3 which used the 1-hour-sample proxy with DT=3600"
+}

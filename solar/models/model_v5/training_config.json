@@ -1,0 +1,14 @@
+{
+ "variant": "area",
+ "months": "Sep-Mar (extended winter), 2015-2025 only",
+ "train_years_excluded": [],
+ "n_months": 80,
+ "rows_used": 32000000,
+ "mask": "lat >= -60 and elevation <= 3000 m",
+ "weights": "cos(lat)",
+ "max_iter": 250,
+ "n_iter_": 250,
+ "sklearn": "1.1.1",
+ "dt_seconds": 10800.0,
+ "note": "true 3-hour-sum ssrd/tsr (era5_3h_mean), DT=10800; reuses v4's cache restricted to Sep-Mar 2015-2025"
+}
