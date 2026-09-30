@@ -45,8 +45,11 @@ DART, where there's no ground truth to check against directly.
 - **[`boundaries/`](boundaries/)** — Germany's real land (Natural Earth) and
   EEZ (Marine Regions) polygons, used by every Germany-domain script instead
   of a lat/lon bounding box.
-- **[`scaling/`](scaling/)** — one-off check of TCo1279-DART's seasonal
-  wind-speed/cloud-cover scaling factors.
+- **[`context/`](context/)** — project motivation material, not part of the
+  reconstruction/validation pipeline: TCo1279-DART's climate pattern-scaling
+  coefficients (local wind-speed/cloud-cover change per 1K of global warming,
+  DJF/JJA) for both the Germany and South Korea study domains from the
+  proposal, visualized from an externally-supplied dataset.
 
 ## Literature comparison
 
