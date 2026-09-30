@@ -2,22 +2,23 @@
 #SBATCH --job-name=dart_100m
 #SBATCH --partition=shared
 #SBATCH --account=ab0995
-#SBATCH --array=0-99%20
+#SBATCH --array=0-139%20
 #SBATCH --cpus-per-task=1
 #SBATCH --mem=8G
 #SBATCH --time=02:00:00
 #SBATCH --output=/work/ab0995/a270321/AWI-dark-doldrums-project/wind/logs/dart_reconstruct_%A_%a.log
 
-# 100 tasks = all Oct/Nov/Dec/Jan/Feb calendar-month files across DART years 1950-1969
-# (5 months x 20 years). Each task is fully independent -- no winter-season grouping,
-# just the plain calendar year/month embedded in the DART file's own name.
+# 140 tasks = all Sep/Oct/Nov/Dec/Jan/Feb/Mar calendar-month files across DART years
+# 1950-1969 (7 months x 20 years, Sep-Mar extended winter). Each task is fully
+# independent -- no winter-season grouping, just the plain calendar year/month
+# embedded in the DART file's own name.
 set -uo pipefail
 cd /work/ab0995/a270321/AWI-dark-doldrums-project/wind
 module load analysis-toolbox/python-04.2026
 
-MONTHS=(10 11 12 1 2)
-YEAR_IDX=$(( SLURM_ARRAY_TASK_ID / 5 ))
-MONTH_IDX=$(( SLURM_ARRAY_TASK_ID % 5 ))
+MONTHS=(9 10 11 12 1 2 3)
+YEAR_IDX=$(( SLURM_ARRAY_TASK_ID / 7 ))
+MONTH_IDX=$(( SLURM_ARRAY_TASK_ID % 7 ))
 YEAR=$(( 1950 + YEAR_IDX ))
 MONTH=${MONTHS[$MONTH_IDX]}
 

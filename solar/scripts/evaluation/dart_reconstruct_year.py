@@ -1,6 +1,8 @@
-"""PRODUCTION reconstruction: v3-area model + the exact constrained monthly rescale
-(rescale.py) against DART's own real monthly ssrd, for one DART year's
-Jan/Feb/Oct/Nov/Dec (the "October-to-February" months within that calendar year).
+"""PRODUCTION reconstruction: v5-area model (trained on genuine 3-hour-sum ERA5
+ssrd/tsr, era5_3h_mean -- NOT the earlier 1h-accum-sampled-every-3h data v3 used)
++ the exact constrained monthly rescale (rescale.py) against DART's own real
+monthly ssrd, for one DART year's Jan/Feb/Mar/Sep/Oct/Nov/Dec (the "Sep-Mar
+extended winter" months within that calendar year).
 Writes full 3-hourly ssrd netCDF files, one per month, at native resolution.
 
 The exact-sum constraint (memory rule: rescaling is part of the model) is verified
@@ -29,9 +31,9 @@ from reconstruct_ssrd_dart import (DAY_MU, DT_DART, MONTHLY_ANCHOR_DIVISOR, TEMP
                                    is_leap, log, nearest_regular_index)
 from rescale import constrained_rescale
 
-MODEL_PATH = "models/model_v3/area/model_kt_v3.joblib"
+MODEL_PATH = "models/model_v5/model_kt_v5.joblib"
 FEATURES = ["T", "tcc", "hcc", "mcc", "lcc", "mu"]
-MONTHS = [1, 2, 10, 11, 12]     # the "Oct-Feb" months within THIS calendar year
+MONTHS = [1, 2, 3, 9, 10, 11, 12]     # Sep-Mar extended winter within THIS calendar year
 KMAX = 1.1
 TB = 8
 

@@ -1,0 +1,421 @@
+<title>Mockert Comparison</title>
+<style>
+  :root{
+    --surface: #fcfcfb; --page: #f9f9f7; --ink: #0b0b0b; --ink-2: #52514e; --ink-muted: #898781;
+    --grid: #e1e0d9; --baseline: #c3c2b7; --border: rgba(11,11,11,0.10);
+    --series-real: #2a78d6; --series-recon: #eb6834; --series-smard: #1baf7a;
+    --critical: #d03b3b; --card-shadow: 0 1px 2px rgba(11,11,11,0.04);
+  }
+  @media (prefers-color-scheme: dark){
+    :root:not([data-theme="light"]){
+      color-scheme: dark;
+      --surface: #1a1a19; --page: #0d0d0d; --ink: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+      --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
+      --series-real: #3987e5; --series-recon: #d95926; --series-smard: #199e70;
+      --critical: #e66767; --card-shadow: none;
+    }
+  }
+  :root[data-theme="dark"]{
+    color-scheme: dark;
+    --surface: #1a1a19; --page: #0d0d0d; --ink: #ffffff; --ink-2: #c3c2b7; --ink-muted: #898781;
+    --grid: #2c2c2a; --baseline: #383835; --border: rgba(255,255,255,0.10);
+    --series-real: #3987e5; --series-recon: #d95926; --series-smard: #199e70;
+    --critical: #e66767; --card-shadow: none;
+  }
+  *{ box-sizing: border-box; }
+  body{ background: var(--page); color: var(--ink); font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+  .wrap{ max-width: 1000px; margin: 0 auto; padding: 28px 16px 64px; display: flex; flex-direction: column; gap: 26px; }
+  header h1{ font-size: clamp(22px, 4vw, 30px); font-weight: 700; margin: 0 0 6px; letter-spacing: -0.01em; text-wrap: balance; }
+  header p.lede{ margin: 0; color: var(--ink-2); font-size: 15px; line-height: 1.55; max-width: 74ch; }
+  .meta-row{ display: flex; flex-wrap: wrap; gap: 8px 10px; margin-top: 14px; }
+  .meta-pill{ font-size: 12px; color: var(--ink-2); background: var(--surface); border: 1px solid var(--border); border-radius: 100px; padding: 5px 12px; }
+
+  .card{ background: var(--surface); border: 1px solid var(--border); border-radius: 14px; box-shadow: var(--card-shadow); padding: 20px; }
+  .card h2{ font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--ink-muted); margin: 0 0 4px; }
+  .card h2 .sub{ display:block; text-transform: none; letter-spacing: normal; font-weight: 400; font-size: 13px; color: var(--ink-2); margin-top: 4px; }
+
+  .revision-note{ background: color-mix(in srgb, var(--series-recon) 10%, var(--surface)); border: 1px solid var(--series-recon); border-radius: 10px; padding: 12px 16px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+  .revision-note strong{ color: var(--ink); }
+
+  .headline-grid{ display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; }
+  @media (max-width: 760px){ .headline-grid{ grid-template-columns: repeat(2, 1fr); } }
+  .head-card{ background: var(--page); border: 1px solid var(--border); border-radius: 12px; padding: 16px 18px; text-align: center; }
+  .head-card.published{ border: 1px solid var(--critical); background: color-mix(in srgb, var(--critical) 8%, var(--page)); }
+  .head-card .dot{ width: 9px; height: 9px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .head-card .label{ font-size: 12px; color: var(--ink-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .head-card .val{ font-size: 34px; font-weight: 700; font-variant-numeric: tabular-nums; margin-top: 6px; }
+  .head-card .unit{ font-size: 12px; color: var(--ink-muted); margin-top: 2px; }
+  .head-card .sub2{ font-size: 11px; color: var(--ink-muted); margin-top: 8px; border-top: 1px solid var(--border); padding-top: 6px; }
+
+  table.data-table{ border-collapse: collapse; width: 100%; font-size: 12.5px; margin-top: 4px; }
+  table.data-table th, table.data-table td{ padding: 7px 10px; text-align: right; font-variant-numeric: tabular-nums; }
+  table.data-table th:first-child, table.data-table td:first-child{ text-align: left; }
+  table.data-table thead th{ color: var(--ink-muted); font-weight: 600; font-size: 11px; text-transform: uppercase; letter-spacing: 0.03em; border-bottom: 1px solid var(--border); }
+  table.data-table td{ color: var(--ink-2); border-bottom: 1px solid var(--border); }
+  table.data-table td.hd{ color: var(--ink); font-weight: 600; }
+  table.data-table tr.pub td{ color: var(--critical); font-weight: 600; }
+
+  .legend{ display: flex; gap: 20px; align-items: center; flex-wrap: wrap; margin-bottom: 6px; }
+  .legend-item{ display: flex; align-items: center; gap: 7px; font-size: 12.5px; color: var(--ink-2); }
+  .legend-line{ width: 18px; height: 2px; border-radius: 2px; }
+  .legend-dash{ width: 18px; height: 0; border-top: 2px dashed var(--critical); }
+
+  .chart-wrap{ position: relative; width: 100%; }
+  svg.chart{ width: 100%; height: auto; display: block; overflow: visible; }
+  .axis-line{ stroke: var(--baseline); stroke-width: 1; }
+  .grid-line{ stroke: var(--grid); stroke-width: 1; }
+  .tick-label{ fill: var(--ink-muted); font-size: 10.5px; }
+  .bar-recon{ fill: var(--series-recon); }
+  .bar-real{ fill: var(--series-real); }
+  .bar-smard{ fill: var(--series-smard); }
+  .ref-line{ stroke: var(--critical); stroke-width: 1.3; stroke-dasharray: 4 3; }
+  .ref-label{ fill: var(--critical); font-size: 10px; }
+  .series-real-line{ fill: none; stroke: var(--series-real); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .series-recon-line{ fill: none; stroke: var(--series-recon); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .series-smard-line{ fill: none; stroke: var(--series-smard); stroke-width: 2; stroke-linejoin: round; stroke-linecap: round; }
+  .threshold-line{ stroke: var(--critical); stroke-width: 1.3; stroke-dasharray: 4 3; }
+
+  .crosshair{ stroke: var(--ink-muted); stroke-width: 1; pointer-events: none; opacity: 0; }
+  .hover-dot{ pointer-events: none; opacity: 0; }
+  .hover-dot circle{ r: 3.5; stroke: var(--surface); stroke-width: 2; }
+  .hover-rect{ fill: transparent; cursor: crosshair; }
+  .tooltip{ position: absolute; pointer-events: none; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px; font-size: 12px; box-shadow: 0 4px 14px rgba(0,0,0,0.14); opacity: 0; transform: translate(-50%, -110%); white-space: nowrap; z-index: 5; }
+  .tooltip .t-date{ color: var(--ink-muted); font-size: 11px; margin-bottom: 4px; }
+  .tooltip .t-row{ display:flex; align-items:center; gap:14px; justify-content: space-between; }
+  .tooltip .t-row + .t-row{ margin-top: 2px; }
+  .tooltip .t-key{ display:flex; align-items:center; gap:6px; color: var(--ink-2); }
+  .tooltip .t-line{ width: 12px; height: 2px; border-radius: 2px; }
+  .tooltip .t-val{ font-variant-numeric: tabular-nums; font-weight: 600; }
+
+  .note{ background: color-mix(in srgb, var(--series-smard) 10%, var(--surface)); border: 1px solid var(--series-smard); border-radius: 10px; padding: 12px 16px; font-size: 13px; line-height: 1.55; color: var(--ink-2); }
+  .note strong{ color: var(--ink); }
+
+  footer{ font-size: 12.5px; color: var(--ink-muted); line-height: 1.6; border-top: 1px solid var(--border); padding-top: 18px; }
+  footer strong{ color: var(--ink-2); }
+</style>
+
+<div class="wrap">
+
+  <header>
+    <h1>Mockert Comparison</h1>
+    <p class="lede">
+      Applying Mockert et al. (2023)'s own Dunkelflaute definition — their capacity weights,
+      their threshold, their exact event-construction rule — to Germany's true land+EEZ
+      boundary, three ways: the ERA5 reconstruction, ERA5's real fields directly, and actual
+      SMARD generation. Does the count, and the shape of individual events, land near their
+      published numbers?
+    </p>
+    <div class="meta-row">
+      <span class="meta-pill">11 winters · Sep–Mar extended winter, 2016–2026</span>
+      <span class="meta-pill">Weights: solar 44% / onshore 50% / offshore 6% (Mockert 2018 mix)</span>
+      <span class="meta-pill">48-hour rolling mean, threshold CF &lt; 6%</span>
+      <span class="meta-pill">Germany true boundary (729 land / 123 EEZ cells)</span>
+    </div>
+  </header>
+
+  <div class="revision-note">
+    <strong>Revised after a methodology check against the actual paper.</strong> The first pass
+    of this analysis had two mismatches with Mockert et al.'s Section 2.4, both now fixed:
+    (1) it windowed on Oct–Feb only, dropping September even though the paper explicitly counts
+    the whole year and finds the bulk of events fall in <strong>autumn (Sep–Nov) and winter
+    (Dec–Feb)</strong> — Sep–Mar is what this pipeline's solar reconstruction actually has data
+    for, so that's the window used now; and (2) event duration was measured as simple
+    threshold-crossing runs of the rolling mean, but the paper's actual construction is different:
+    <em>"All time steps contributing to a running mean below the threshold are considered part of
+    the Dunkelflaute. Therefore, the minimum duration of a Dunkelflaute is 48h [...] by
+    definition."</em> That means a single below-threshold rolling-mean sample pulls its whole
+    48-hour contributing window into the event, not just that one instant — now implemented that
+    way below, which is why every event here is ≥2 days.
+  </div>
+
+  <section class="card">
+    <h2>Events per winter<span class="sub">Mockert et al. report 4.0–4.3 events/year across 1979–2018 (the red-outlined tile).</span></h2>
+    <div class="headline-grid" id="headline-grid"></div>
+  </section>
+
+  <section class="card">
+    <h2>Event duration<span class="sub">The stronger validation signal: does the shape of individual events match, not just the count?</span></h2>
+    <table class="data-table">
+      <thead><tr><th>Source</th><th>Median duration</th><th>Max duration</th><th>Events &gt; 5 days</th></tr></thead>
+      <tbody id="duration-tbody"></tbody>
+    </table>
+  </section>
+
+  <section class="card">
+    <h2>Every winter, 2016–2026<span class="sub">Event count per winter, three ways.</span></h2>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-line" style="background:var(--series-real)"></span>Real (ERA5)</span>
+      <span class="legend-item"><span class="legend-line" style="background:var(--series-recon)"></span>Reconstruction</span>
+      <span class="legend-item"><span class="legend-line" style="background:var(--series-smard)"></span>SMARD (actual)</span>
+      <span class="legend-item"><span class="legend-dash"></span>Mockert published (~4)</span>
+    </div>
+    <div class="chart-wrap" id="winter-bar-wrap"></div>
+  </section>
+
+  <section class="card">
+    <h2>One winter in detail: 2024–25<span class="sub">The 48-hour rolling combined CF the threshold is applied to, now shown Sep–Mar. Dip below the dashed line = a flagged dark-doldrum period (expanded to its full 48h window in the count above).</span></h2>
+    <div class="legend">
+      <span class="legend-item"><span class="legend-line" style="background:var(--series-real)"></span>Real (ERA5)</span>
+      <span class="legend-item"><span class="legend-line" style="background:var(--series-recon)"></span>Reconstruction</span>
+      <span class="legend-item"><span class="legend-line" style="background:var(--series-smard)"></span>SMARD (actual)</span>
+      <span class="legend-item"><span class="legend-dash"></span>6% threshold</span>
+    </div>
+    <div class="chart-wrap" id="detail-wrap"></div>
+  </section>
+
+  <div class="note">
+    <strong>Data-quality fix carried over from the earlier pass:</strong> offshore SMARD capacity
+    factor is computed against a linearly-interpolated capacity denominator (not the flat yearly
+    snapshot), because 2015's offshore capacity roughly tripled within the year — the flat
+    denominator produced CF up to 297% and, worse, excluding those points left winter 2016 57%
+    missing inside its rolling window, silently suppressing real events.
+  </div>
+
+  <section class="card">
+    <h2>Full results table</h2>
+    <table class="data-table">
+      <thead><tr><th>Source</th><th>Events/winter</th><th>Median dur.</th><th>Max dur.</th><th>Total events (11 winters)</th></tr></thead>
+      <tbody id="results-tbody"></tbody>
+    </table>
+  </section>
+
+  <footer id="footer-text">Loading summary…</footer>
+
+</div>
+
+<script>
+(function(){
+  "use strict";
+  fetch("report_data.json").then(function(r){ return r.json(); }).then(function(d){ init(d); })
+    .catch(function(err){ document.getElementById("winter-bar-wrap").textContent = "Could not load report data."; console.error(err); });
+
+  function fmtDate(iso){
+    var dt = new Date(iso + ":00");
+    return dt.toLocaleDateString("en-GB", { month: "short", day: "numeric" });
+  }
+  function svgEl(tag, attrs){
+    var el = document.createElementNS("http://www.w3.org/2000/svg", tag);
+    for (var k in attrs) el.setAttribute(k, attrs[k]);
+    return el;
+  }
+  function pathFrom(values, xScale, yScale){
+    var d = "", pen = false;
+    for (var i = 0; i < values.length; i++){
+      var v = values[i];
+      if (v === null || v === undefined || isNaN(v)){ pen = false; continue; }
+      var x = xScale(i), y = yScale(v);
+      d += (pen ? " L " : " M ") + x.toFixed(2) + " " + y.toFixed(2);
+      pen = true;
+    }
+    return d;
+  }
+
+  function buildWinterBarChart(container, perWinter, winters, published){
+    var W = 900, H = 240;
+    var M = { top: 14, right: 14, bottom: 26, left: 40 };
+    var innerW = W - M.left - M.right, innerH = H - M.top - M.bottom;
+    var n = winters.length;
+    var bandW = innerW / n;
+    var barW = Math.min(bandW * 0.24, 16);
+    var maxV = 0;
+    ["recon","real","smard"].forEach(function(s){ perWinter[s].forEach(function(p){ if (p[1] > maxV) maxV = p[1]; }); });
+    var yMax = Math.ceil((maxV + 1) / 2) * 2;
+    var yScale = function(v){ return M.top + innerH - (v / yMax) * innerH; };
+
+    var svg = svgEl("svg", { class: "chart", viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "Events per winter" });
+    for (var t = 0; t <= yMax; t += 2){
+      var y = yScale(t);
+      svg.appendChild(svgEl("line", { class: "grid-line", x1: M.left, x2: W - M.right, y1: y, y2: y }));
+      var lbl = svgEl("text", { class: "tick-label", x: M.left - 8, y: y + 3.5, "text-anchor": "end" });
+      lbl.textContent = t;
+      svg.appendChild(lbl);
+    }
+    svg.appendChild(svgEl("line", { class: "axis-line", x1: M.left, x2: M.left, y1: M.top, y2: H - M.bottom }));
+    svg.appendChild(svgEl("line", { class: "axis-line", x1: M.left, x2: W - M.right, y1: H - M.bottom, y2: H - M.bottom }));
+    var yPub = yScale(published);
+    svg.appendChild(svgEl("line", { class: "ref-line", x1: M.left, x2: W - M.right, y1: yPub, y2: yPub }));
+    var refLbl = svgEl("text", { class: "ref-label", x: W - M.right, y: yPub - 4, "text-anchor": "end" });
+    refLbl.textContent = "Mockert published (~" + published + ")";
+    svg.appendChild(refLbl);
+
+    winters.forEach(function(w, i){
+      var cx = M.left + i * bandW + bandW / 2;
+      ["recon","real","smard"].forEach(function(s, si){
+        var v = perWinter[s][i][1];
+        var x = cx + (si - 1) * (barW + 3);
+        svg.appendChild(svgEl("rect", { class: "bar-" + s, x: x - barW/2, y: yScale(v), width: barW,
+          height: Math.max(yScale(0) - yScale(v), 0.5), rx: 2 }));
+      });
+      var xl = svgEl("text", { class: "tick-label", x: cx, y: H - M.bottom + 14, "text-anchor": "middle" });
+      xl.textContent = "'" + String(w).slice(2);
+      svg.appendChild(xl);
+    });
+    container.appendChild(svg);
+  }
+
+  function buildDetailChart(container, detail){
+    var W = 900, H = 260;
+    var M = { top: 14, right: 14, bottom: 26, left: 40 };
+    var innerW = W - M.left - M.right, innerH = H - M.top - M.bottom;
+    var labels = detail.time;
+    var n = labels.length;
+    var series = [
+      { key: "real", label: "Real", values: detail.roll_real },
+      { key: "recon", label: "Reconstruction", values: detail.roll_recon },
+      { key: "smard", label: "SMARD (actual)", values: detail.roll_smard }
+    ];
+    var maxV = 0;
+    series.forEach(function(s){ s.values.forEach(function(v){ if (v !== null && v > maxV) maxV = v; }); });
+    var yMax = Math.ceil(maxV * 20) / 20 + 0.02;
+    var xScale = function(i){ return M.left + (n <= 1 ? 0 : (i / (n - 1)) * innerW); };
+    var yScale = function(v){ return M.top + innerH - (v / yMax) * innerH; };
+
+    var svg = svgEl("svg", { class: "chart", viewBox: "0 0 " + W + " " + H, role: "img", "aria-label": "48-hour rolling combined CF, winter 2024-25" });
+    [0, 0.06, 0.1, 0.15, 0.2, 0.25, 0.3].filter(function(t){ return t <= yMax; }).forEach(function(t){
+      var y = yScale(t);
+      svg.appendChild(svgEl("line", { class: "grid-line", x1: M.left, x2: W - M.right, y1: y, y2: y }));
+      var lbl = svgEl("text", { class: "tick-label", x: M.left - 8, y: y + 3.5, "text-anchor": "end" });
+      lbl.textContent = Math.round(t * 100) + "%";
+      svg.appendChild(lbl);
+    });
+    svg.appendChild(svgEl("line", { class: "axis-line", x1: M.left, x2: M.left, y1: M.top, y2: H - M.bottom }));
+    svg.appendChild(svgEl("line", { class: "axis-line", x1: M.left, x2: W - M.right, y1: H - M.bottom, y2: H - M.bottom }));
+    var yThresh = yScale(0.06);
+    svg.appendChild(svgEl("line", { class: "threshold-line", x1: M.left, x2: W - M.right, y1: yThresh, y2: yThresh }));
+
+    var seen = {};
+    for (var i = 0; i < n; i++){
+      var mo = labels[i].slice(5,7), day = labels[i].slice(8,10), hr = labels[i].slice(11,13);
+      if (day === "01" && hr === "00" && !seen[mo]){
+        seen[mo] = true;
+        var x = xScale(i);
+        svg.appendChild(svgEl("line", { class: "grid-line", x1: x, x2: x, y1: M.top, y2: H - M.bottom }));
+        var dt = new Date(labels[i] + ":00");
+        var lbl2 = svgEl("text", { class: "tick-label", x: x, y: H - M.bottom + 16, "text-anchor": "start" });
+        lbl2.textContent = dt.toLocaleDateString("en-GB", { month: "short" });
+        svg.appendChild(lbl2);
+      }
+    }
+
+    series.forEach(function(s){
+      svg.appendChild(svgEl("path", { class: "series-" + s.key + "-line", d: pathFrom(s.values, xScale, yScale) }));
+    });
+
+    var crosshair = svgEl("line", { class: "crosshair", x1: 0, x2: 0, y1: M.top, y2: H - M.bottom });
+    svg.appendChild(crosshair);
+    var dots = series.map(function(s){
+      var g = svgEl("g", { class: "hover-dot" });
+      var c = svgEl("circle", { cx: 0, cy: 0, fill: "var(--series-" + s.key + ")" });
+      g.appendChild(c); svg.appendChild(g); return g;
+    });
+    var hitRect = svgEl("rect", { class: "hover-rect", x: M.left, y: M.top, width: innerW, height: innerH });
+    svg.appendChild(hitRect);
+    container.style.position = "relative";
+    container.appendChild(svg);
+    var tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    container.appendChild(tooltip);
+
+    function onMove(evt){
+      var rect = svg.getBoundingClientRect();
+      var px = (evt.touches ? evt.touches[0].clientX : evt.clientX) - rect.left;
+      var svgX = (px / rect.width) * W;
+      var idx = Math.round(((svgX - M.left) / innerW) * (n - 1));
+      idx = Math.max(0, Math.min(n - 1, idx));
+      var x = xScale(idx);
+      crosshair.setAttribute("x1", x); crosshair.setAttribute("x2", x);
+      crosshair.style.opacity = 1;
+      var rowsHtml = "";
+      series.forEach(function(s, si){
+        var v = s.values[idx];
+        var g = dots[si];
+        if (v === null || v === undefined || isNaN(v)){ g.style.opacity = 0; }
+        else { g.style.opacity = 1; g.querySelector("circle").setAttribute("cx", x); g.querySelector("circle").setAttribute("cy", yScale(v)); }
+        var valTxt = (v === null || v === undefined || isNaN(v)) ? "—" : (v * 100).toFixed(1) + "%";
+        rowsHtml += '<div class="t-row"><span class="t-key"><span class="t-line" style="background:var(--series-' + s.key + ')"></span></span><span class="t-val">' + valTxt + "</span></div>";
+      });
+      tooltip.innerHTML = '<div class="t-date"></div>' + rowsHtml;
+      tooltip.querySelector(".t-date").textContent = fmtDate(labels[idx]);
+      series.forEach(function(s, si){
+        var row = tooltip.querySelectorAll(".t-row")[si];
+        var labelNode = document.createElement("span");
+        labelNode.textContent = s.label;
+        row.querySelector(".t-key").appendChild(labelNode);
+      });
+      tooltip.style.left = ((x / W) * 100) + "%";
+      tooltip.style.top = ((yScale(series[0].values[idx] || 0.03) / H) * 100) + "%";
+      tooltip.style.opacity = 1;
+    }
+    function onLeave(){ crosshair.style.opacity = 0; dots.forEach(function(g){ g.style.opacity = 0; }); tooltip.style.opacity = 0; }
+    svg.addEventListener("pointermove", onMove);
+    svg.addEventListener("pointerleave", onLeave);
+    svg.addEventListener("touchmove", function(e){ onMove(e); }, { passive: true });
+  }
+
+  function headTile(label, colorVar, epw, medianDur, isPublished){
+    var el = document.createElement("div");
+    el.className = "head-card" + (isPublished ? " published" : "");
+    el.innerHTML =
+      '<div class="label">' + (colorVar ? '<span class="dot" style="background:var(' + colorVar + ')"></span>' : "") + label + '</div>' +
+      '<div class="val">' + epw + '</div>' +
+      '<div class="unit">events / winter</div>' +
+      (medianDur !== null ? '<div class="sub2">median duration ' + medianDur + ' days</div>' : '<div class="sub2">Mockert et al. (2023), 1979–2018</div>');
+    return el;
+  }
+
+  function init(d){
+    var winters = d.winters;
+    var pub = d.mockert_published;
+
+    var hg = document.getElementById("headline-grid");
+    hg.appendChild(headTile("Reconstruction", "--series-recon", d.results.recon.events_per_winter, d.results.recon.median_dur));
+    hg.appendChild(headTile("Real (ERA5)", "--series-real", d.results.real.events_per_winter, d.results.real.median_dur));
+    hg.appendChild(headTile("SMARD (actual)", "--series-smard", d.results.smard.events_per_winter, d.results.smard.median_dur));
+    hg.appendChild(headTile("Published (Mockert)", null, pub.events_per_winter_range, null, true));
+
+    var durTbody = document.getElementById("duration-tbody");
+    [["Reconstruction","recon"],["Real (ERA5)","real"],["SMARD (actual)","smard"]].forEach(function(pair){
+      var r = d.results[pair[1]];
+      var tr = document.createElement("tr");
+      tr.innerHTML = '<td class="hd">' + pair[0] + '</td><td>' + r.median_dur + ' d</td><td>' + r.max_dur + ' d</td><td>' + r.pct_over_5d + '%</td>';
+      durTbody.appendChild(tr);
+    });
+    var pubTr = document.createElement("tr");
+    pubTr.className = "pub";
+    pubTr.innerHTML = '<td class="hd">Published (Mockert et al.)</td><td>' + pub.median_dur + ' d</td><td>' + pub.max_dur + ' d</td><td>' + pub.pct_over_5d + '%</td>';
+    durTbody.appendChild(pubTr);
+
+    var perWinter = { recon: d.per_winter.recon, real: d.per_winter.real, smard: d.per_winter.smard };
+    buildWinterBarChart(document.getElementById("winter-bar-wrap"), perWinter, winters, pub.events_per_winter);
+
+    buildDetailChart(document.getElementById("detail-wrap"), d.detail);
+
+    var tbody = document.getElementById("results-tbody");
+    [["Reconstruction","recon"],["Real (ERA5)","real"],["SMARD (actual)","smard"],["Published (Mockert et al.)",null]].forEach(function(pair){
+      var tr = document.createElement("tr");
+      if (pair[1]){
+        var r = d.results[pair[1]];
+        tr.innerHTML = '<td class="hd">' + pair[0] + '</td><td>' + r.events_per_winter + '</td><td>' + r.median_dur + ' d</td><td>' + r.max_dur + ' d</td><td>' + r.n_events + '</td>';
+      } else {
+        tr.innerHTML = '<td class="hd">' + pair[0] + '</td><td>' + pub.events_per_winter_range + '</td><td>' + pub.median_dur + ' d</td><td>' + pub.max_dur + ' d</td><td>—</td>';
+      }
+      tbody.appendChild(tr);
+    });
+
+    var r = d.results;
+    document.getElementById("footer-text").innerHTML =
+      '<strong>Reading this, after the fix:</strong> event <em>duration</em> now lines up closely with the literature — SMARD’s median ' +
+      'event is ' + r.smard.median_dur + ' days against Mockert et al.’s published 3.2 days, and ' + r.smard.pct_over_5d + '% of SMARD events run ' +
+      'longer than 5 days versus their 9%. That’s a real, independent validation signal, since duration shape wasn’t something either fix was ' +
+      'tuned to hit. Event <em>frequency</em> still runs above the paper for all three sources — SMARD ' + r.smard.events_per_winter + '/winter, ' +
+      'reconstruction ' + r.recon.events_per_winter + ', real ERA5 ' + r.real.events_per_winter + ', against a published 4.0–4.3/year. Two candidate ' +
+      'explanations remain open: Mockert et al. used 1979–2018 ERA5 with Atlite-simulated capacity factors and a different (idealised) turbine/panel model, ' +
+      'not the trained reconstruction or SMARD’s real fleet mix used here; and this decade (2016–2026) may simply have had more low-wind winters than ' +
+      'their 40-year climatology average — the paper’s own record includes winters with as many as 9 and 10 Dunkelflauten (1995/96 and 1996/97), so the ' +
+      '4.3/year figure is an average over real year-to-year swings, not a tight band. ' +
+      'That real ERA5 sits <em>furthest</em> from the literature (not the reconstruction) still suggests the frequency gap isn’t primarily a reconstruction ' +
+      'error. Before extending this to DART-1950C and 2080C, it’s worth checking Mockert’s Figure S3 (year-by-year counts) to see whether 5–7 events/winter ' +
+      'is within their observed range rather than outside it.';
+  }
+})();
+</script>

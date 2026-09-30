@@ -7,7 +7,7 @@
 #SBATCH --ntasks=1
 #SBATCH --cpus-per-task=64
 #SBATCH --mem=0
-#SBATCH --time=03:30:00
+#SBATCH --time=05:00:00
 #SBATCH --output=/work/ab0995/a270321/AWI-dark-doldrums-project/solar/logs/dart_recon_%x_%a_%j.log
 set -euo pipefail
 export PATH=/sw/spack-levante/mambaforge-4.11.0-0-Linux-x86_64-sobz6z/bin:$PATH
