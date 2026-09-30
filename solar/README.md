@@ -27,34 +27,75 @@ TCo1279-DART writes surface downward shortwave radiation (`ssrd`) only as a mont
 
 ### ERA5 fields
 
-| Field | Description | Timestep |
-|-------|-------------|----------|
-| `ssrd` | Surface solar radiation downwards (J/m²), **real** | 3-hourly |
-| `tsr` | Top net solar radiation | 3-hourly |
-| `tisr` | TOA incident solar radiation | Computed analytically, not a stored field — pure astronomy (see `scripts/core/solar_geometry.py`) |
-| `tcc`/`hcc`/`mcc`/`lcc` | Total/high/medium/low cloud cover | 3-hourly |
+All `ssrd`/`tsr` fields carry the **same** `units` attribute — `J m**-2` —
+regardless of source or accumulation window. That's a trap, not a
+convenience: see "Units and accumulation conventions" below.
+
+| Field | Description | Unit | Timestep |
+|-------|-------------|------|----------|
+| `ssrd` (3-hourly) | Surface solar radiation downwards, **real** | J/m², genuine 3-hour accumulation | 3-hourly |
+| `ssrd` (monthly) | Same field, ERA5's own monthly product — downloaded and used as an independent cross-check on the 3-hourly reconstruction | J/m², mean of a **1-day** accumulation | Monthly |
+| `tsr` | Top net solar radiation | J/m², 3-hour accumulation | 3-hourly |
+| `tisr` | TOA incident solar radiation | W/m² (computed, not accumulated) | Computed analytically, not a stored field — pure astronomy (see `scripts/core/solar_geometry.py`) |
+| `tcc`/`hcc`/`mcc`/`lcc` | Total/high/medium/low cloud cover | fraction, 0–1 | 3-hourly |
 
 ### TCo1279-DART fields
 
-| Field | Description | Timestep |
-|-------|-------------|----------|
-| `ssrd` | Surface solar radiation downwards | Monthly mean only — the gap this project fills |
-| `tsr` | Top net solar radiation | 3-hourly |
-| `tcc`/`hcc`/`mcc`/`lcc` | Total/high/medium/low cloud cover | 3-hourly |
-| `tisr` | TOA incident solar radiation | Computed analytically, same as for ERA5 — DART carries no such field itself, which is exactly why this predictor transfers cleanly |
+| Field | Description | Unit | Timestep |
+|-------|-------------|------|----------|
+| `ssrd` | Surface solar radiation downwards | J/m², mean of a **3-hour** accumulation | Monthly mean only — the gap this project fills |
+| `tsr` | Top net solar radiation | J/m², 3-hour accumulation | 3-hourly |
+| `tcc`/`hcc`/`mcc`/`lcc` | Total/high/medium/low cloud cover | fraction, 0–1 | 3-hourly |
+| `tisr` | TOA incident solar radiation | W/m² (computed) | Computed analytically, same as for ERA5 — DART carries no such field itself, which is exactly why this predictor transfers cleanly |
 
 ### SMARD fields
 
-| Field | Description | Timestep |
-|-------|-------------|----------|
-| Solar generation | Realisierte Erzeugung, MW | Hourly (native); resampled to 3-hourly to match ERA5/DART |
-| Installed capacity | Solar PV, MW | Yearly |
+| Field | Description | Unit | Timestep |
+|-------|-------------|------|----------|
+| Solar generation | Realisierte Erzeugung | MW | Hourly (native); resampled to 3-hourly to match ERA5/DART |
+| Installed capacity | Solar PV | MW | Yearly |
 
 ### Derived quantity
 
 | Field | Description |
 |-------|-------------|
 | `kt` | Clearness index, `ssrd/tisr` — the model's actual prediction target |
+
+### Units and accumulation conventions
+
+Converting J/m² to W/m² means dividing by the number of seconds the value was
+*actually* accumulated over — and that window is **not** written anywhere in
+the file's own metadata; every ERA5/DART ssrd/tsr field claims the same units
+string no matter which window applies. Get the divisor wrong and everything
+downstream is silently off by a clean factor (e.g. 86400/10800 = 8×) while
+the rescale step's own residual check still reports "perfect" agreement,
+since it only confirms internal consistency with whatever divisor it was
+given — not that the divisor is the right one.
+
+| Field | Accumulation window | Divisor (seconds) |
+|-------|---------------------|--------------------|
+| ERA5 monthly ssrd | Mean of a 1-day accumulation | 86,400 |
+| ERA5 hourly ssrd | 1 hour | 3,600 |
+| ERA5 3-hourly ssrd/tsr | 3 hours (genuine sum) | 10,800 |
+| DART monthly ssrd | Mean of a 3-hour accumulation | 10,800 |
+| DART 3-hourly ssrd/tsr | 3 hours | 10,800 |
+
+ERA5's monthly convention was verified directly, not assumed: `GRIB_stepType`
+confirms `avgad` (average of daily accumulations), and dividing by 86,400
+reproduces the 3-hourly file's own `/3600` mean to within 0.01 W/m²
+(`era5_monthly_ssrd_202508` = `era5_ssrd_3h_202508` = 179.66 W/m², both
+ways). DART's monthly convention is likewise read from its own
+`cell_methods = "time: mean (interval: 3 h)"` attribute, identical for both
+1950C and 2080C — **not** assumed to match ERA5's. This single value is
+isolated in one named constant, `MONTHLY_ANCHOR_DIVISOR`
+(`scripts/core/reconstruct_ssrd*.py`), specifically so the ERA5 and DART
+variants of a shared script can never silently drift onto the wrong divisor.
+
+**Full unit-conversion chain, J/m² → capacity factor:**
+
+```
+ssrd (J/m²)  ÷ accum_seconds  →  irradiance (W/m²)  ÷ 1000 (STC)  →  clip[0,1]  →  CF
+```
 
 ---
 
@@ -96,17 +137,18 @@ Phase 4: Validate
   └──► vs. real SMARD generation (independent of ERA5 entirely)
         │
         ▼
-Phase 5: Apply to DART (dart_reconstruct_year.py)
-  - Same model, same rescale, DART's own cloud fields + monthly ssrd
+Phase 5: Literature validation (NOT in solar/ -- the gate before DART)
+  - Solar CF alone isn't what gets checked against the literature -- it's
+    weighted-combined with wind onshore/offshore CF first, in dunkelflaute/,
+    on the same 2015-2026 ERA5 period, THEN checked against four published
+    Dunkelflaute definitions (Mockert, Li, Kaspar, Lohmann). This is the
+    trustworthiness gate: only once the combined pipeline held up here did
+    it get applied to DART. See the root README's dunkelflaute/ section,
+    dunkelflaute/data/germany_era5/README.md, and dunkelflaute/reports/.
         │
         ▼
-Phase 6: Downstream — combined into Germany's combined CF (NOT in solar/)
-  - Solar CF alone isn't what gets validated against the literature --
-    it's weighted-combined with wind onshore/offshore CF first, in
-    dunkelflaute/, THEN checked against four published Dunkelflaute
-    definitions (Mockert, Li, Kaspar, Lohmann). See the root README's
-    dunkelflaute/ section, dunkelflaute/data/germany_era5/README.md, and
-    dunkelflaute/reports/ for that validation.
+Phase 6: Apply to DART (dart_reconstruct_year.py)
+  - Same model, same rescale, DART's own cloud fields + monthly ssrd
 ```
 
 ### Corrections Applied
