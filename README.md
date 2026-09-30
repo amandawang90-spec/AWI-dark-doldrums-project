@@ -42,14 +42,15 @@ DART, where there's no ground truth to check against directly.
     as ground truth throughout the ERA5 validation.
   - `reports/` — published HTML comparisons against the literature (open
     directly in a browser).
+  - `context/` — not part of the reconstruction/validation pipeline itself,
+    but the motivation for the 1950C-vs-2080C comparison: TCo1279-DART's
+    climate pattern-scaling coefficients (local change in wind speed and
+    cloud cover — the two Dunkelflaute drivers — per 1K of global warming),
+    visualized from an externally-supplied dataset. Also shows the South
+    Korea domain from the proposal, alongside Germany.
 - **[`boundaries/`](boundaries/)** — Germany's real land (Natural Earth) and
   EEZ (Marine Regions) polygons, used by every Germany-domain script instead
   of a lat/lon bounding box.
-- **[`context/`](context/)** — project motivation material, not part of the
-  reconstruction/validation pipeline: TCo1279-DART's climate pattern-scaling
-  coefficients (local wind-speed/cloud-cover change per 1K of global warming,
-  DJF/JJA) for both the Germany and South Korea study domains from the
-  proposal, visualized from an externally-supplied dataset.
 
 ## Literature comparison
 
