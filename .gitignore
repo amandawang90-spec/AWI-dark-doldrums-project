@@ -225,8 +225,8 @@ data/
 *.grib
 *.grb
 
-# Claude Code session scratchpad -- ephemeral working files, not project output
-.claude_scratch/
+# Session scratchpad (draft reports, validation checks) -- not project output
+scratch/
 
 # Over GitHub's 100MB hard file-size limit; regenerate via
 # solar/scripts/evaluation/evaluate_v2_cv.py.
