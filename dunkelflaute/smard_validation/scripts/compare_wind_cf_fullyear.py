@@ -17,8 +17,8 @@ import pandas as pd
 
 ROOT = "/work/ab0995/a270321/AWI-dark-doldrums-project"
 ERA5_PATH = f"{ROOT}/dunkelflaute/data/germany_era5/wind_cf_era5_fullyear_2015_2026.npz"
-SMARD_PATH = f"{ROOT}/smard_validation/data/cf_smard_fullyear_2015_2026.csv"
-OUT_PATH = f"{ROOT}/smard_validation/data/wind_cf_comparison_fullyear_2015_2026.json"
+SMARD_PATH = f"{ROOT}/dunkelflaute/smard_validation/data/cf_smard_fullyear_2015_2026.csv"
+OUT_PATH = f"{ROOT}/dunkelflaute/smard_validation/data/wind_cf_comparison_fullyear_2015_2026.json"
 
 era5 = np.load(ERA5_PATH, allow_pickle=True)
 era5_time = pd.to_datetime([str(t) for t in era5["time"]]).tz_localize("UTC")

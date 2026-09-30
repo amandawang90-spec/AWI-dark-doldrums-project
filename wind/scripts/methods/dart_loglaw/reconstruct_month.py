@@ -44,8 +44,8 @@ CHUNK = int(sys.argv[sys.argv.index("--chunk") + 1]) if "--chunk" in sys.argv el
 PILOT_N = int(sys.argv[sys.argv.index("--pilot-steps") + 1]) if "--pilot-steps" in sys.argv else None
 
 RUNS = {
-    "1950c": dict(dart_name="TCo1279-DART-1950C", cycle_base=1950, out_dir="data/results/dart_1950c_100m"),
-    "2080c": dict(dart_name="TCo1279-DART-2080C", cycle_base=2080, out_dir="data/results/dart_2080c_100m"),
+    "1950c": dict(dart_name="TCo1279-DART-1950C", cycle_base=1950, out_dir="data/dart_1950c_100m"),
+    "2080c": dict(dart_name="TCo1279-DART-2080C", cycle_base=2080, out_dir="data/dart_2080c_100m"),
 }
 cfg = RUNS[RUN]
 CYCLE_BASE = cfg["cycle_base"]

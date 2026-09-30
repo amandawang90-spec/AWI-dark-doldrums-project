@@ -8,13 +8,13 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 
 ROOT = "/work/ab0995/a270321/AWI-dark-doldrums-project"
-SMARD_PATH = f"{ROOT}/smard_validation/data/cf_smard_solar_fullyear_2015_2026.csv"
+SMARD_PATH = f"{ROOT}/dunkelflaute/smard_validation/data/cf_smard_solar_fullyear_2015_2026.csv"
 INK, SEC, MUTED, GRID, AXIS, SURF = "#0b0b0b", "#52514e", "#898781", "#e1e0d9", "#c3c2b7", "#fcfcfb"
 COL = {"v4": "#1baf7a", "v5": "#eda100", "real": "#2a78d6", "smard": "#eb6834"}
 
 
 def load_variant(variant):
-    path = f"{ROOT}/smard_validation/data/germany_solar_cf_{variant}_sepmar_2015_2026.npz"
+    path = f"{ROOT}/dunkelflaute/smard_validation/data/germany_solar_cf_{variant}_sepmar_2015_2026.npz"
     if not os.path.exists(path):
         return None
     d = np.load(path, allow_pickle=True)

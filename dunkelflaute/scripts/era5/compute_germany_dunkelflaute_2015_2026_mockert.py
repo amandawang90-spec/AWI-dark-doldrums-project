@@ -3,12 +3,12 @@ Germany combined capacity factor + Mockert et al. (2023) Dunkelflaute events,
 ERA5 2015-2026, Sep-Mar extended winter, real land+EEZ boundary.
 
 Sources (all already verified to use the real Germany boundary, not a bbox):
-  - solar: smard_validation/data/germany_solar_cf_v5_sepmar_2015_2026.npz
+  - solar: dunkelflaute/smard_validation/data/germany_solar_cf_v5_sepmar_2015_2026.npz
            (model_v5, trained on genuine 3-hour-sum ERA5 ssrd/tsr -- NOT the
            earlier 1h-accum-sampled-every-3h data model_v3 used)
   - wind:  dunkelflaute/data/germany_era5/wind_cf_era5_fullyear_2015_2026.npz
            (full year; restricted to Sep-Mar here to match solar's coverage)
-  - SMARD: smard_validation/data/smard/realisierte_erzeugung/*, resampled to
+  - SMARD: dunkelflaute/smard_validation/data/smard/realisierte_erzeugung/*, resampled to
            the same 3-hourly grid (label="right", closed="right", matching
            ERA5's own backward-looking accumulation convention)
 
@@ -39,10 +39,10 @@ import pandas as pd
 _ROOT = "/work/ab0995/a270321/AWI-dark-doldrums-project"
 os.chdir(_ROOT)
 
-SOLAR_PATH = "smard_validation/data/germany_solar_cf_v5_sepmar_2015_2026.npz"
+SOLAR_PATH = "dunkelflaute/smard_validation/data/germany_solar_cf_v5_sepmar_2015_2026.npz"
 WIND_PATH = "dunkelflaute/data/germany_era5/wind_cf_era5_fullyear_2015_2026.npz"
-SMARD_GEN_DIR = "smard_validation/data/smard/realisierte_erzeugung"
-SMARD_CAP_DIR = "smard_validation/data/smard/installierte_erzeugungsleistung_history"
+SMARD_GEN_DIR = "dunkelflaute/smard_validation/data/smard/realisierte_erzeugung"
+SMARD_CAP_DIR = "dunkelflaute/smard_validation/data/smard/installierte_erzeugungsleistung_history"
 OUT_PATH = "dunkelflaute/data/germany_era5/combined_cf_2015_2026_sepmar_mockertweights.npz"
 
 WEIGHTS = dict(solar=0.44, onshore=0.50, offshore=0.06)

@@ -42,7 +42,7 @@ from core.capacity_factor import wind_speed, wind_cf, solar_cf, ONSHORE, OFFSHOR
 
 SOLAR_DIR = "solar/data/dart_reconstructed/{year}"
 SOLAR_FILE = "ssrd_reduced_3h_{year}{month:02d}-{year}{month:02d}.nc"
-WIND_DIR = "wind/data/results/dart_1950c_100m"
+WIND_DIR = "wind/data/dart_1950c_100m"
 WIND_FILE = "u100v100_{year}{month:02d}.nc"
 
 SPINUP_YEARS = {1950, 1951}

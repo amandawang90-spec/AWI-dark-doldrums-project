@@ -14,6 +14,10 @@ to a few hundredths of a degree / seconds of time, the standard reference
 formulas used in solar-engineering irradiance models (e.g. Iqbal 1983, "An
 Introduction to Solar Radiation").
 
+See solar/reference/README.md for how the equivalent quantities (TSIR, cos
+solar zenith angle) are computed inside OpenIFS itself -- this module is an
+independent, tisr-only reimplementation of that same physics.
+
 ERA5's tisr is an ACCUMULATION in J/m2 over the hour ending at the stamp, not an
 instantaneous value. toa_irradiance_accumulated reproduces that convention by
 averaging instantaneous irradiance over N sub-steps within the window (midpoint

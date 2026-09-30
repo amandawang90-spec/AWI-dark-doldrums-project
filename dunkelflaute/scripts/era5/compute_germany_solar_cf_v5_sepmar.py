@@ -7,7 +7,7 @@ compute_germany_combined_cf_era5_true3h.py, which only covered a single pilot
 winter (2024-2025) using pre-sliced Germany-only true3h data, before the full
 global 2015-2026 backfill existed. Solar only (no wind) -- this is the direct
 model-reconstruction side of the SMARD comparison (see
-smard_validation/scripts/compute_smard_solar_cf_fullyear.py for the real side).
+dunkelflaute/smard_validation/scripts/compute_smard_solar_cf_fullyear.py for the real side).
 
 Calendar-year month grouping, matching the rest of this project (not a season
 spanning two calendar years): for year Y, months are Sep-Dec of Y AND Jan-Mar
@@ -192,7 +192,7 @@ def main():
         sys.exit("Usage: python3 compute_germany_solar_cf_v5_sepmar.py v4|v5")
     variant = sys.argv[1]
     model_path = f"{_ROOT}/solar/models/model_{variant}/model_kt_{variant}.joblib"
-    out_path = f"{_ROOT}/smard_validation/data/germany_solar_cf_{variant}_sepmar_2015_2026.npz"
+    out_path = f"{_ROOT}/dunkelflaute/smard_validation/data/germany_solar_cf_{variant}_sepmar_2015_2026.npz"
 
     global _worker_model_path
     _worker_model_path = model_path

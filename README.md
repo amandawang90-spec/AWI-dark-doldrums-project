@@ -1,99 +1,100 @@
 # AWI dark doldrums project
 
-Analysis code for "dark doldrum" events — periods of simultaneously low wind and
-low solar resource — using ERA5 as a testbed for methods that will be applied to
-TCo1279-DART.
+A "Dunkelflaute" (dark doldrum) is a period when wind and solar power output
+are both low at once — the case that matters most for grid resilience, since
+the two resources are normally expected to compensate for each other. This
+repo reconstructs the fields needed to detect Dunkelflaute events in
+**TCo1279-DART** climate simulations (1950C control run and 2080C
+high-emission future), validates that reconstruction against **ERA5**
+reanalysis and **SMARD** (Bundesnetzagentur) real German grid data, and
+compares the resulting event statistics against four published definitions
+from the literature.
 
-The work is in two strands:
-
-- **[`wind/`](wind/)** — reconstructing 100 m winds (`u100`/`v100`) from 10 m winds
-  (`u10`/`v10`), since TCo1279-DART does not carry a 100 m level. Log-law and
-  regression approaches are validated against ERA5, which does have real
-  `u100`/`v100`.
-- **[`solar/`](solar/)** — reconstructing 3-hourly surface downward shortwave
-  (`ssrd`) from the fields TCo1279-DART does carry 3-hourly (`tsr` plus the four
-  cloud fractions), since the runs write `ssrd` only as a monthly mean. ERA5
-  supplies the training target. The reconstructed irradiance then drives a solar
-  capacity factor.
-
-## Findings so far
-
-[`wind/FINDINGS.md`](wind/FINDINGS.md) is the working record of results. In short:
-
-- The log law alone reproduces ERA5 `u100`/`v100` with RMSE ~1.19 m/s onshore and
-  ~0.60 m/s offshore (r = 0.97 / 0.997), stable across three test months.
-- Regression beats the log law on overall onshore RMSE, but the two metrics
-  disagree in the low-wind (<3 m/s) dark-doldrum regime: the regression's fitted
-  intercept is a large fraction of a 1–2 m/s true value. Neither method is precise
-  there (MAPE 15–39%) — a limitation to state rather than hide.
-- **TCo1279 has no usable roughness field.** `sr` (param 173) is a flat placeholder
-  at 0.0001 m across all 6,599,680 points. Orography (`sdor`/`sdfor`) is populated
-  but is terrain relief, not aerodynamic roughness, and is exactly zero over ocean.
-- Borrowing ERA5's `fsr` is defensible: the log-law ratio is only logarithmically
-  sensitive to z0, and the 25→9 km resolution mismatch costs ~0.2–0.25 m/s.
-  Fetch and ignored displacement height are the larger caveats.
+DART doesn't carry everything needed directly: it writes 100 m wind only as
+10 m (`u10`/`v10`), and solar irradiance (`ssrd`) only as a monthly mean, not
+3-hourly. The reconstruction pipeline below fills both gaps, trained and
+validated on ERA5 — which does have the real fields — before being applied to
+DART, where there's no ground truth to check against directly.
 
 ## Layout
 
-```
-wind/
-  download_era5_winds.py       u10/v10/u100/v100 for a timestamp
-  download_era5_z0_lsm.py      forecast surface roughness + land-sea mask
-  loglaw_reconstruct.py        log-law reconstruction vs. real ERA5 u100/v100
-  compare_loglaw_vs_regression.py
-  compare_three_timestamps.py  seasonal stability across the three test dates
-  z0_scale_sensitivity.py      cost of coarsening z0 (the ERA5→TCo1279 question)
-  plot_z0_maps.py              TCo1279 sr vs. sdor vs. ERA5 fsr
-  check_*.py                   data sanity checks (roughness, coverage, orography)
-  figures/                     generated plots
-  FINDINGS.md
+- **[`solar/`](solar/)** — reconstructs 3-hourly `ssrd` from the fields DART
+  *does* carry 3-hourly (cloud fractions + `tsr`), via a
+  `HistGradientBoostingRegressor` predicting clearness index, then an exact
+  monthly rescale to match DART's real monthly total. `solar/models/` (see
+  its own README) holds five training iterations, v1→v5; **use v5**.
+  `solar/reference/` documents the OpenIFS solar-geometry physics this
+  reimplements.
+- **[`wind/`](wind/)** — reconstructs 100 m wind (`u100`/`v100`) from 10 m
+  wind via the log law, using ERA5 land roughness (year-cycled) over land and
+  the Charnock relation over ocean. `wind/reports/FINDINGS.md` has the
+  log-law-vs-regression validation writeup.
+- **[`dunkelflaute/`](dunkelflaute/)** — combines the solar + wind capacity
+  factors into Germany's combined CF and detects Dunkelflaute events. This is
+  where the actual science question lives:
+  - `scripts/core/capacity_factor.py`, `domain.py` — shared CF formulas and
+    the real Germany land+EEZ boundary mask (from [`boundaries/`](boundaries/),
+    not a bounding box).
+  - `scripts/era5/` — the ERA5-side pipeline. Start with
+    `compute_germany_dunkelflaute_2015_2026_mockert.py`, the current,
+    validated version (see `data/germany_era5/README.md` for why).
+  - `smard_validation/` — SMARD real-generation data and CF computation, used
+    as ground truth throughout the ERA5 validation.
+  - `reports/` — published HTML comparisons against the literature (open
+    directly in a browser).
+- **[`boundaries/`](boundaries/)** — Germany's real land (Natural Earth) and
+  EEZ (Marine Regions) polygons, used by every Germany-domain script instead
+  of a lat/lon bounding box.
+- **[`scaling/`](scaling/)** — one-off check of TCo1279-DART's seasonal
+  wind-speed/cloud-cover scaling factors.
 
-solar/
-  download_era5.py             every ERA5 field the reconstruction needs, in one
-                               pass; skips what already exists (--list, --force)
-  check_era5.py                completeness, structure and unit-convention checks
-```
+## Literature comparison
 
-Many scripts have a matching `*.sh` wrapper that loads the environment module
-before running them — every script in `solar/`, and most of the check/plot scripts
-in `wind/`. Where a wrapper exists, run it rather than the `.py` directly.
+Four published Dunkelflaute definitions are checked against this pipeline's
+output — algorithm faithfully reproduced from each paper's own text, not a
+secondhand summary:
 
-## Running
+- **Mockert et al. (2023)** — 48h rolling-mean combined CF < 6%, their exact
+  window-expansion event-construction rule, their capacity weights.
+- **Li et al. (2021)** — instantaneous wind CF < 20% *and* solar CF < 20%,
+  sustained > 24h, no smoothing.
+- **Kaspar et al. (2019)** — the paper Mockert calibrated their threshold
+  against; instantaneous CF < 10%, ≥ 48h, no smoothing.
+- **Lohmann et al. (2025)** — not a new definition but a report card on the
+  others: evaluated against real grid-stress data (Energy Not Served), found
+  CF-threshold methods are weak predictors (F-score 0.14) next to
+  residual-load-based ones (F-score 0.41).
 
-On the AWI HPC (`albedo`), `python` is not on `PATH`. Every wrapper starts with:
+Results and methodology write-ups: `dunkelflaute/reports/`.
+
+## Running on the HPC
+
+`python` is not on `PATH` by default. Load the environment module first:
 
 ```bash
 module load analysis-toolbox/python-04.2026
 ```
 
-which provides Python 3.12, xarray 2026.4.0, and cfgrib/ecCodes. Then, from the
-`wind/` or `solar/` directory, either run a wrapper:
+Many scripts have a matching `.sh` wrapper that does this for you — prefer the
+wrapper where one exists.
 
-```bash
-./plot_z0_maps.sh
-```
-
-or load the module yourself and call a script that has no wrapper:
-
-```bash
-module load analysis-toolbox/python-04.2026
-python3 loglaw_reconstruct.py
-```
-
-Downloads use the [CDS API](https://cds.climate.copernicus.eu/how-to-api) and need
-a personal access token in `~/.cdsapirc`. No credentials are stored in this repo.
+Downloads use the [CDS API](https://cds.climate.copernicus.eu/how-to-api) and
+need a personal access token in `~/.cdsapirc`; no credentials are stored here.
 
 ## Data
 
-Input NetCDF is **not tracked** — the ERA5 downloads run to several GB. Recreate
-`wind/data/` and `solar/data/` by running the `download_era5_*` scripts before the
-analysis scripts.
+Input/output NetCDF and most intermediate `.npz`/`.csv` files are **not
+tracked** in git (see `.gitignore`) — they run to hundreds of GB. Recreate
+them by running the relevant `download_*` / `compute_*` / `dart_reconstruct_*`
+scripts. Small, genuinely load-bearing summary files (report data, training
+configs) are tracked.
 
-## A note on ERA5's grid
+## ERA5 grid note
 
-ERA5 test data here is 0.25° regular lat/lon (721×1440). Raw percentiles over that
-grid over-count polar points — 48% of land points sit poleward of 60°N/S but only
-21% of land *area* does. All scores in this repo are area-weighted by cos(lat).
+ERA5 here is 0.25° regular lat/lon. Raw percentiles over that grid over-count
+polar points — 48% of land points sit poleward of 60°N/S but only 21% of land
+*area* does. All spatial averages in this repo are area-weighted by cos(lat)
+unless a script says otherwise.
 
 ## License
 

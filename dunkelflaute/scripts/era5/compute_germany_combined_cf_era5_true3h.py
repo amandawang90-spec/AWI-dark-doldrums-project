@@ -1,7 +1,7 @@
 """
 Same as compute_germany_combined_cf_era5.py, except ssrd and tsr come from a
-genuine 3-hour accumulation (smard_validation/data/era5_true3h/, built by
-smard_validation/scripts/build_era5_true3h.py from native-hourly ERA5) instead
+genuine 3-hour accumulation (dunkelflaute/smard_validation/data/era5_true3h/, built by
+dunkelflaute/smard_validation/scripts/build_era5_true3h.py from native-hourly ERA5) instead
 of the main pipeline's era5_ssrd_3h_*.nc / era5_tsr_3h_*.nc, which only ever
 sampled the 1-hour accumulation ending at each 3-hourly mark
 (SSRD_ACCUM_SECONDS_ERA5 = 1*3600 in core/capacity_factor.py -- see the SMARD
@@ -37,7 +37,7 @@ from core.capacity_factor import wind_cf, solar_cf, ONSHORE, OFFSHORE   # noqa: 
 
 SOLAR_DIR = f"{_ROOT}/solar/data/era5"                          # clouds only, here
 WIND_DIR = f"{_ROOT}/wind/data/era5/training_data"
-TRUE3H_DIR = f"{_ROOT}/smard_validation/data/era5_true3h"       # ssrd, tsr, genuine 3h
+TRUE3H_DIR = f"{_ROOT}/dunkelflaute/smard_validation/data/era5_true3h"       # ssrd, tsr, genuine 3h
 LSM_PATH = f"{_ROOT}/wind/data/era5/era5_lsm_20260830_0000.nc"
 MODEL_PATH = f"{_ROOT}/solar/models/model_v3/area/model_kt_v3.joblib"
 LAND_PATH = f"{_ROOT}/boundaries/land.geojson"
@@ -57,7 +57,7 @@ WINTER_END = int(os.environ.get("GERMANY_WINTER_END", "2025"))
 WINTER_LABELS = range(WINTER_START, WINTER_END + 1)
 MONTHS_OND = [10, 11, 12]
 MONTHS_JF = [1, 2]
-OUT_DIR = os.environ.get("GERMANY_OUT_DIR", f"{_ROOT}/smard_validation/data")
+OUT_DIR = os.environ.get("GERMANY_OUT_DIR", f"{_ROOT}/dunkelflaute/smard_validation/data")
 
 
 def box_slices(latlo, lathi, lonlo, lonhi):

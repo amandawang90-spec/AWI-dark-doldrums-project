@@ -21,7 +21,7 @@ MONTH_IDX=$(( SLURM_ARRAY_TASK_ID % 7 ))
 YEAR=$(( 2080 + YEAR_IDX ))
 MONTH=${MONTHS[$MONTH_IDX]}
 
-OUTFILE="data/results/dart_2080c_100m/u100v100_${YEAR}$(printf '%02d' $MONTH).nc"
+OUTFILE="data/dart_2080c_100m/u100v100_${YEAR}$(printf '%02d' $MONTH).nc"
 if [ -s "$OUTFILE" ]; then
   echo "task $SLURM_ARRAY_TASK_ID: $OUTFILE already exists, skipping"
   exit 0
