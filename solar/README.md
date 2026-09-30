@@ -18,21 +18,43 @@ TCo1279-DART writes surface downward shortwave radiation (`ssrd`) only as a mont
 
 ## 📂 Data Sources
 
-| Source | Fields used | Role |
-|--------|-------------|------|
-| **ERA5** reanalysis (2015–2026) | `tcc`/`hcc`/`mcc`/`lcc` (cloud fractions), `tsr` (net solar radiation), `ssrd` (real, target) | Training target + validation testbed |
-| **TCo1279-DART** (1950C, 2080C) | Same four cloud fractions + `tsr`, 3-hourly; `ssrd` monthly only | The system the model is ultimately applied to |
-| **SMARD** (Bundesnetzagentur) | Real German solar generation (MW) + installed capacity | Independent ground truth, unrelated to ERA5 |
+| Source | Period | Role |
+|--------|--------|------|
+| **ERA5** reanalysis | 2015-01-01 – 2026-03-31, Sep–Mar months only | Training target + validation testbed |
+| **TCo1279-DART 1950C** | 1950–1969 (20 years), Sep–Mar only | Present-day-analogue scenario the model is applied to |
+| **TCo1279-DART 2080C** | 2080–2092 (13 years), Sep–Mar only | High-emission future scenario the model is applied to |
+| **SMARD** (Bundesnetzagentur) | 2015-01-01 – 2026-09-27 (raw download); Sep–Mar subset used to match the ERA5 window | Independent ground truth, unrelated to ERA5 |
 
-### Key Fields
+### ERA5 fields
 
-| Field | Description | Resolution |
-|-------|-------------|-----------|
-| `ssrd` | Surface solar radiation downwards (J/m²) | 3-hourly (ERA5, real) / monthly (DART) |
+| Field | Description | Timestep |
+|-------|-------------|----------|
+| `ssrd` | Surface solar radiation downwards (J/m²), **real** | 3-hourly |
 | `tsr` | Top net solar radiation | 3-hourly |
-| `tisr` | TOA incident solar radiation | Computed analytically — pure astronomy, needs no reanalysis field (see `scripts/core/solar_geometry.py`) |
+| `tisr` | TOA incident solar radiation | Computed analytically, not a stored field — pure astronomy (see `scripts/core/solar_geometry.py`) |
 | `tcc`/`hcc`/`mcc`/`lcc` | Total/high/medium/low cloud cover | 3-hourly |
-| `kt` | Clearness index, `ssrd/tisr` | Model's actual prediction target |
+
+### TCo1279-DART fields
+
+| Field | Description | Timestep |
+|-------|-------------|----------|
+| `ssrd` | Surface solar radiation downwards | Monthly mean only — the gap this project fills |
+| `tsr` | Top net solar radiation | 3-hourly |
+| `tcc`/`hcc`/`mcc`/`lcc` | Total/high/medium/low cloud cover | 3-hourly |
+| `tisr` | TOA incident solar radiation | Computed analytically, same as for ERA5 — DART carries no such field itself, which is exactly why this predictor transfers cleanly |
+
+### SMARD fields
+
+| Field | Description | Timestep |
+|-------|-------------|----------|
+| Solar generation | Realisierte Erzeugung, MW | Hourly (native); resampled to 3-hourly to match ERA5/DART |
+| Installed capacity | Solar PV, MW | Yearly |
+
+### Derived quantity
+
+| Field | Description |
+|-------|-------------|
+| `kt` | Clearness index, `ssrd/tisr` — the model's actual prediction target |
 
 ---
 
@@ -76,6 +98,15 @@ Phase 4: Validate
         ▼
 Phase 5: Apply to DART (dart_reconstruct_year.py)
   - Same model, same rescale, DART's own cloud fields + monthly ssrd
+        │
+        ▼
+Phase 6: Downstream — combined into Germany's combined CF (NOT in solar/)
+  - Solar CF alone isn't what gets validated against the literature --
+    it's weighted-combined with wind onshore/offshore CF first, in
+    dunkelflaute/, THEN checked against four published Dunkelflaute
+    definitions (Mockert, Li, Kaspar, Lohmann). See the root README's
+    dunkelflaute/ section, dunkelflaute/data/germany_era5/README.md, and
+    dunkelflaute/reports/ for that validation.
 ```
 
 ### Corrections Applied
