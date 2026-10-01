@@ -190,8 +190,6 @@ Phase 7: Apply to DART (dart_reconstruct_year.py)
     runs. A check of the finished DART output itself has not been run yet.
 ```
 
-**Visual report (Phase 5/6, decade view)**: [v5 vs ERA5 vs SMARD, 2015–2026](https://claude.ai/artifact/ThqZ2FGwKCWeYHTUAYHPzV) — solar, onshore, offshore and combined CF against real ERA5 and real SMARD, year by year across the full period (Key Finding 3's Germany-only table above is the single-snapshot version of this same check; this is its decade-long counterpart, and the one Phase 6's combined-CF literature validation builds on).
-
 ### Scope: what's global vs. what's Germany-only
 
 | Phase | Script(s) | Scope |
@@ -266,7 +264,7 @@ All three numbers below are for Germany specifically — this is the SMARD compa
 
 The reconstruction doesn't just correlate well with ERA5 over Germany — it matches real ERA5's own ability to predict the real German grid. The remaining gap to SMARD belongs to ERA5 itself, not to the reconstruction. Whether this holds up equally well elsewhere in the world is untested — there's no real-generation ground truth outside Germany in this repo to check it against.
 
-**Visual report**: [Recon vs SMARD](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the published comparison this table's numbers come from.
+**Visual reports**: [Recon vs SMARD](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the published comparison this table's numbers come from, single-snapshot. [v5 vs ERA5 vs SMARD, 2015–2026](https://claude.ai/artifact/ThqZ2FGwKCWeYHTUAYHPzV) — the same check run year by year across the full decade instead of pooled, plus the onshore/offshore/combined breakdown that feeds Phase 6's literature validation.
 
 ### 4. One finding remains open, stated rather than hidden
 
