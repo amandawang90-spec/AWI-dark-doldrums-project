@@ -39,33 +39,11 @@ how the reconstruction should be read.
 | Grid points, globally | 721 × 1440 = 1,038,240 | 6,599,680 (irregular per-latitude point count, verified directly from the reconstructed output files) |
 | Point arrangement | Every latitude row has the same 1,440 longitude points | Point count per latitude row *decreases* towards the poles — points are only placed where needed to preserve resolution, not on a fixed rectangular grid |
 
-**How the model handles this without any regridding step.** The kt-regression
-is a **pointwise** model: it maps one grid cell's own local feature vector
-(`T`, `tcc`, `hcc`, `mcc`, `lcc`, `mu`) to that same cell's clearness index,
-with no dependence on neighbouring cells, grid spacing, or grid topology.
-`tisr` — the one feature that isn't itself a DART-carried field — is
-computed analytically from each cell's own latitude, longitude and timestamp
-(`solar_geometry.py`), so it too is evaluated natively on whichever grid is
-supplied, ERA5's or DART's, with no interpolation between them. Practically:
-the exact same fitted model is evaluated once per ERA5 grid point during
-training/validation, and once per DART grid point during reconstruction —
-two structurally different point sets, same function, no regridding of
-either the training coefficients or DART's native fields at any stage.
-
-**What this does *not* resolve, and hasn't yet been tested.** A pointwise
-model sidesteps the need to regrid, but not the separate question of whether
-the *learned relationship itself* transfers across resolutions. ERA5's cloud
-fractions at 0.25° are area averages over a much larger footprint (~28 km)
-than DART's ~9 km native cells; if the true cloud–clearness relationship is
-nonlinear in sub-grid cloud heterogeneity — plausible, since a partly-cloudy
-coarse cell and a genuinely overcast fine cell can share the same mean `tcc`
-but very different `kt` — a model fit on coarser, more-averaged ERA5 inputs
-could behave differently on DART's less-averaged ~9 km fields. This is the
-solar-side counterpart to a check that **was** already done on the wind side
-(`wind/README.md`'s roughness-length coarsening sensitivity test, costed at
-~0.2–0.25 m/s RMSE for the equivalent 25 km→9 km mismatch); no analogous
-resolution-transfer test has been run for the solar model. Flagged here as
-an open item, not a resolved one — see Recommendations below.
+No regridding happens anywhere in this pipeline — the model is applied
+natively to each grid in turn, for the methodological reason explained under
+Model Specification below. Whether that's actually *safe* across two such
+different resolutions is a separate, still-open question — see Known Data
+Quality Issues.
 
 ### ERA5 fields
 
@@ -270,6 +248,39 @@ v1 and v2 were never masked at all — their predictions over Antarctica, high m
 
 **Capacity factor**: `CF = clip((ssrd / accum_seconds) / 1000, 0, 1)` — 1000 W/m² is STC irradiance.
 
+### How `tisr` is calculated
+
+`tisr` isn't read from any file — it's computed analytically
+(`scripts/core/solar_geometry.py`) from latitude, longitude and timestamp
+alone, using standard solar-geometry astronomy (Spencer 1971 Fourier-series
+approximations, the same reference formulas used in solar-engineering
+irradiance models, e.g. Iqbal 1983):
+
+1. **Orbital terms** from fractional day-of-year: eccentricity correction
+   `E0`, solar declination, and the equation of time.
+2. **Cosine of solar zenith angle**:
+   `cosz = sin(lat)·sin(decl) + cos(lat)·cos(decl)·cos(H)`, clipped to zero
+   below the horizon (night), where `H` is the hour angle from solar time
+   (UTC, corrected for longitude and the equation of time).
+3. **Instantaneous TOA irradiance** = `SOLAR_CONSTANT (1361 W/m²) × E0 × cosz`.
+4. **Accumulation**: ERA5's `tisr` is a J/m² accumulation over the window
+   *ending* at its timestamp, not an instantaneous value — reproduced by
+   averaging the instantaneous irradiance over 8 sub-steps within that
+   window (midpoint rule) and multiplying by the window length in seconds,
+   rather than a closed-form integral (simpler to get right).
+
+Two grid-shaped variants exist: `cos_zenith_grid`/`toa_irradiance_accumulated`
+for ERA5's regular `(lat, lon)` outer-product grid, and
+`cos_zenith_cells`/`toa_irradiance_accumulated_cells` for DART's flat,
+irregular cell list, where `lon` at cell *i* isn't independent of `lat` at
+cell *i*. Both are the same physics — this is exactly why the feature
+transfers to DART natively (see Grid Systems, above): it needs no stored
+field on either side, only each point's own coordinates and time, so it's
+evaluated directly on whichever grid is supplied, with nothing to regrid.
+Accuracy is checked directly against ERA5's own real `tisr` field
+(`check_solar_geometry.py`) before being trusted anywhere a truth field
+doesn't exist — i.e. for DART.
+
 ---
 
 ## 🔑 Key Findings
@@ -357,6 +368,7 @@ Every script `chdir`s to this `solar/` root on import (the `_root` snippet at th
 
 - **True-3h anomaly** (Finding 4 above) — unresolved, flagged rather than hidden.
 - **v3+ extrapolation caveat** — cells south of 60°S / above 3000 m are extrapolated, not validated.
+- **Untested cross-resolution transfer**: the model's being *pointwise* means it needs no regridding to run on DART's grid (see Grid Systems, above) — but that sidesteps, rather than answers, whether the relationship it learned actually holds at a different resolution. ERA5's cloud fractions at 0.25° are area averages over a much larger footprint (~28 km) than DART's ~9 km native cells; if the true cloud–clearness relationship is nonlinear in sub-grid cloud heterogeneity — plausible, since a partly-cloudy coarse cell and a genuinely overcast fine cell can share the same mean `tcc` but very different `kt` — a model fit on coarser, more-averaged ERA5 inputs could behave differently on DART's less-averaged fields. The wind side already ran this exact style of check for its own resolution mismatch (`wind/README.md`'s z0 coarsening sensitivity test, costed at ~0.2–0.25 m/s RMSE); no analogous test has been run for solar. See Recommendations, below.
 - **DART reconstruction is in progress**, not complete, as of this writing — `data/dart_reconstructed/` currently mixes 1950C and 2080C years in one flat directory; splitting it into `dart_reconstructed_1950c/`/`_2080c/` is deferred until the jobs finish, so nothing gets moved out from under an active write.
 
 ---
