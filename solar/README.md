@@ -190,6 +190,8 @@ Phase 7: Apply to DART (dart_reconstruct_year.py)
     runs. A check of the finished DART output itself has not been run yet.
 ```
 
+**Visual report (Phase 5/6, decade view)**: [v5 vs ERA5 vs SMARD, 2015–2026](https://claude.ai/artifact/ThqZ2FGwKCWeYHTUAYHPzV) — solar, onshore, offshore and combined CF against real ERA5 and real SMARD, year by year across the full period (Key Finding 3's Germany-only table above is the single-snapshot version of this same check; this is its decade-long counterpart, and the one Phase 6's combined-CF literature validation builds on).
+
 ### Scope: what's global vs. what's Germany-only
 
 | Phase | Script(s) | Scope |
