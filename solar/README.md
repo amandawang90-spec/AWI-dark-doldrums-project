@@ -153,13 +153,21 @@ Phase 3: Constrained Rescale (scripts/core/rescale.py)
         │
         ▼
 Phase 4: Diagnose (per-cell RMSE, bias, error maps)
-  - Pre-rescale: rmse_maps.py, diag_training.py, diag_bias_v2.py
-  - Post-rescale: rmse_maps_rescaled.py, reconstruct_and_diagnose.py
+  - Pre-rescale ("is the model itself any good?"):
+    rmse_maps.py, diag_training.py, diag_bias_v2.py
+  - Post-rescale ("how much 3-hourly error is left once the monthly
+    sum is forced?"): rmse_maps_rescaled.py, reconstruct_and_diagnose.py
         │
         ▼
 Phase 5: Validate
-  ├──► vs. real ERA5 ssrd (held out)     -- global grid, scoreable anywhere
-  └──► vs. real SMARD generation          -- Germany-only, by construction
+  ├──► vs. real ERA5 ssrd (held out)     -- the SCRIPTS support global/regional
+  │                                         scoring, but the headline number
+  │                                         quoted in Key Finding 3 (r=0.998) is
+  │                                         Germany-only -- no equivalent GLOBAL
+  │                                         correlation figure has been computed
+  │                                         and saved for v5. See Scope table below.
+  └──► vs. real SMARD generation          -- Germany-only, unavoidably (SMARD has
+                                              no equivalent dataset anywhere else)
         │
         ▼
 Phase 6: Literature validation (NOT in solar/ -- the gate before DART)
@@ -174,44 +182,28 @@ Phase 6: Literature validation (NOT in solar/ -- the gate before DART)
         ▼
 Phase 7: Apply to DART (dart_reconstruct_year.py)
   - Same model, same rescale, DART's own cloud fields + monthly ssrd
-  - reconstruct_and_diagnose.py writes an error_map_<stamp>.npz alongside
-    every reconstructed month (Phase 4's diagnostic step, run again here,
-    since there's no ERA5/SMARD ground truth for DART itself)
+  - Finished: 1950C 138/140 months (1950-1969), 2080C 91/91 months (2080-2092);
+    Feb/Mar 1952 skipped -- DART's own tcc/tsr input files don't exist
+    (1952 is spin-up, so nothing downstream is affected)
+  - dart_reconstruct_year.py does NOT write error maps; the error_map_<stamp>.npz
+    files in data/reconstructed_ssrd/ come from earlier reconstruct_and_diagnose.py
+    runs. A check of the finished DART output itself has not been run yet.
 ```
-
-### Phase 4 in detail: what each diagnostic script actually measures
-
-| Script | Measures | Against | Rescale applied? | Scope |
-|--------|----------|---------|-------------------|-------|
-| `rmse_maps.py` | Per-cell RMSE + bias (W/m²), and RMSE of the monthly means | Real ERA5 3-hourly `ssrd`, held-out years | No — raw model output | Global (1°), Europe + Korea (full 0.25°) |
-| `diag_training.py` | Learning curve (1M→32M rows), train-vs-held-out error, area/energy-weighted variants | Common held-out set (Jan/Apr/Jul/Oct 2023–2024) | No | Area-weighted (cos lat) globally |
-| `diag_bias_v2.py` | v1 vs v2 bias, binned by `tisr`-equivalent irradiance | Same held-out ERA5 rows | No | Wherever the held-out rows fall (global sample) |
-| `rmse_maps_rescaled.py` | Per-cell RMSE of the **full pipeline** (model + rescale) | Real ERA5 3-hourly `ssrd`, held-out months | **Yes** | Selectable month range (e.g. `--months 12,1,2`) |
-| `reconstruct_and_diagnose.py` | Per-cell actual/predicted/absolute-error/scale-factor arrays | DART's own monthly total (there's no independent truth for DART) | Pre-rescale diagnostic, written alongside the rescaled output | Whatever grid the DART run covers — global |
-
-The pre-rescale scripts (`rmse_maps.py`, `diag_training.py`, `diag_bias_v2.py`) answer "is the ML model itself any good?"; the post-rescale ones (`rmse_maps_rescaled.py`, `reconstruct_and_diagnose.py`) answer "after the hard monthly-sum constraint is enforced, how much residual 3-hourly error is left?" — a materially different (usually smaller) number, since the rescale can't fix within-month timing errors but does fix the mean.
 
 ### Scope: what's global vs. what's Germany-only
 
 | Phase | Script(s) | Scope |
 |-------|-----------|-------|
 | 1. Download | `download_era5.py` | Global — `AREA = None` |
-| 2. Train | `train_v1..v5_model.py` | Global (v3+ minus the lat/elevation mask above — not a country restriction) |
-| 3. Constrained rescale | `rescale.py` | Global — no spatial logic; the monthly-sum constraint is enforced per cell, wherever that cell is |
+| 2. Train | `train_v1..v5_model.py` | Global (v3+ minus the lat/elevation mask — not a country restriction) |
+| 3. Constrained rescale | `rescale.py` | Global — no spatial logic |
 | 4. Diagnose | `rmse_maps*.py`, `diag_*.py` | Mostly global/1°, with Europe/Korea boxes at full resolution in `rmse_maps.py` |
-| 5. Validate — vs. ERA5 | `evaluate_era5_regional.py`, `evaluate_era5_winter.py`, `dart_year_eval.py` | Selectable: Global / Europe / Germany / Korea boxes |
-| 5. Validate — vs. SMARD | `dunkelflaute/smard_validation/` + `boundaries/` | **Germany-only** — SMARD has no equivalent dataset for any other country in this repo |
-| 7. Apply to DART | `dart_reconstruct_year.py` | Global — full native grid (`sl = slice(0, N)`), no region slice |
+| 5. Validate — vs. ERA5 (**capability**) | `evaluate_era5_regional.py`, `evaluate_era5_winter.py`, `dart_year_eval.py` | Selectable: Global / Europe / Germany / Korea boxes |
+| 5. Validate — vs. ERA5 (**the actual quoted number**) | `germany_solar_cf_correlation_summary.json` | **Germany-only** — no global equivalent has been computed and saved for v5 |
+| 5. Validate — vs. SMARD | `dunkelflaute/smard_validation/` + `boundaries/` | **Germany-only**, unavoidably — SMARD has no equivalent dataset anywhere else in this repo |
+| 7. Apply to DART | `dart_reconstruct_year.py` | Global — full native grid, no region slice |
 
-**Takeaway:** the model is trained, rescaled and applied to DART everywhere on Earth; the one check that doesn't depend on ERA5 being right — real reconstruction vs. real grid generation — has only ever been run for Germany.
-
-### Corrections Applied
-
-| Correction | Reason |
-|------|--------|
-| Genuine 3-hour-sum ERA5 target (`era5_3h_mean`), not 1h-accum-sampled-every-3h | v1–v3 were silently trained against a target that wasn't the same quantity DART's own 3-hourly fields represent |
-| SMARD resampled `label="right", closed="right"` | Matches ERA5's backward-looking accumulation convention — using the pandas default (`label="left"`) misaligned every comparison by one bin |
-| Exact constrained monthly rescale (hard constraint, not post-processing) | The reconstruction is only as trustworthy as its agreement with DART's own real monthly total — enforced exactly, not approximately |
+**Takeaway**: the model is trained, rescaled, and applied to DART everywhere on Earth. Broad error diagnostics ran globally during development (Phase 4). But the one clean, quantified "does this actually work" check — the one checked against real-world grid generation, not just another reanalysis — has only ever been computed for Germany, because that's the only place SMARD exists. Key Finding 3's r=0.998/0.931 figures are both Germany numbers, paired against each other on purpose; neither is a global statistic.
 
 ---
 
@@ -248,39 +240,6 @@ v1 and v2 were never masked at all — their predictions over Antarctica, high m
 
 **Capacity factor**: `CF = clip((ssrd / accum_seconds) / 1000, 0, 1)` — 1000 W/m² is STC irradiance.
 
-### How `tisr` is calculated
-
-`tisr` isn't read from any file — it's computed analytically
-(`scripts/core/solar_geometry.py`) from latitude, longitude and timestamp
-alone, using standard solar-geometry astronomy (Spencer 1971 Fourier-series
-approximations, the same reference formulas used in solar-engineering
-irradiance models, e.g. Iqbal 1983):
-
-1. **Orbital terms** from fractional day-of-year: eccentricity correction
-   `E0`, solar declination, and the equation of time.
-2. **Cosine of solar zenith angle**:
-   `cosz = sin(lat)·sin(decl) + cos(lat)·cos(decl)·cos(H)`, clipped to zero
-   below the horizon (night), where `H` is the hour angle from solar time
-   (UTC, corrected for longitude and the equation of time).
-3. **Instantaneous TOA irradiance** = `SOLAR_CONSTANT (1361 W/m²) × E0 × cosz`.
-4. **Accumulation**: ERA5's `tisr` is a J/m² accumulation over the window
-   *ending* at its timestamp, not an instantaneous value — reproduced by
-   averaging the instantaneous irradiance over 8 sub-steps within that
-   window (midpoint rule) and multiplying by the window length in seconds,
-   rather than a closed-form integral (simpler to get right).
-
-Two grid-shaped variants exist: `cos_zenith_grid`/`toa_irradiance_accumulated`
-for ERA5's regular `(lat, lon)` outer-product grid, and
-`cos_zenith_cells`/`toa_irradiance_accumulated_cells` for DART's flat,
-irregular cell list, where `lon` at cell *i* isn't independent of `lat` at
-cell *i*. Both are the same physics — this is exactly why the feature
-transfers to DART natively (see Grid Systems, above): it needs no stored
-field on either side, only each point's own coordinates and time, so it's
-evaluated directly on whichever grid is supplied, with nothing to regrid.
-Accuracy is checked directly against ERA5's own real `tisr` field
-(`check_solar_geometry.py`) before being trusted anywhere a truth field
-doesn't exist — i.e. for DART.
-
 ---
 
 ## 🔑 Key Findings
@@ -293,15 +252,17 @@ v1–v3 trained against ERA5 `ssrd` sampled as a **1-hour accumulation taken eve
 
 SMARD's hourly generation was originally resampled to 3-hourly with a forward-looking bin (`label="left"`), while ERA5's own accumulated fields are backward-looking. Fixing the resample convention alone raised the SMARD correlation from **~0.75 to ~0.97** — before touching the model at all.
 
-### 3. Current accuracy is essentially at the ERA5 ceiling
+### 3. Current accuracy is essentially at the ERA5 ceiling (Germany — no global equivalent computed)
 
-| Comparison | r |
+All three numbers below are for Germany specifically — this is the SMARD comparison, and SMARD only exists for Germany. No global version of this table exists; see the Scope table above.
+
+| Comparison (Germany only) | r |
 |------------|---|
 | v5 reconstruction vs. real ERA5 | 0.998 |
 | v5 reconstruction vs. real SMARD | 0.931 |
 | **Real ERA5 vs. real SMARD** | **0.931** |
 
-The reconstruction doesn't just correlate well with ERA5 — it matches real ERA5's own ability to predict the real grid. The remaining gap to SMARD belongs to ERA5 itself, not to the reconstruction.
+The reconstruction doesn't just correlate well with ERA5 over Germany — it matches real ERA5's own ability to predict the real German grid. The remaining gap to SMARD belongs to ERA5 itself, not to the reconstruction. Whether this holds up equally well elsewhere in the world is untested — there's no real-generation ground truth outside Germany in this repo to check it against.
 
 ### 4. One finding remains open, stated rather than hidden
 
@@ -317,11 +278,11 @@ The training mask excludes cells south of 60°S and above 3000 m elevation. Pred
 
 | Scenario | Status | Recommendation |
 |----------|--------|-----------------|
-| **1950C** | Reconstruction in progress | Closer to the training climate (2015–2025) — lower distribution-shift risk, but still an out-of-sample test with no direct ground truth. |
-| **2080C** | Reconstruction in progress | No ground truth exists for a future climate. Frame any result as *"under the assumption that today's cloud-to-irradiance physics holds"*, not as validated. |
+| **1950C** | Reconstruction finished (138/140 months; Feb/Mar 1952 inputs missing) | Closer to the training climate (2015–2025) — lower distribution-shift risk, but still an out-of-sample test with no direct ground truth. |
+| **2080C** | Reconstruction finished (91/91 months) | No ground truth exists for a future climate. Frame any result as *"under the assumption that today's cloud-to-irradiance physics holds"*, not as validated. |
 | **Both** | — | Cheap, concrete check before trusting either: train on a subset of ERA5 years, test on the years furthest away in time, as a proxy for temporal distribution-shift risk. Large skill degradation with distance = a real warning sign; little movement = actual supporting evidence, not just an assumption. |
 | **Both** | Not yet run | A spatial-resolution counterpart to the check above: coarsen ERA5's own 0.25° cloud fractions further (e.g. to ~1°) and see how much the fitted kt-relationship's skill degrades, as a proxy for whether training-resolution (~28 km) vs. application-resolution (~9 km) is a real risk here — the wind side already ran this exact style of test for z0 and got a small, quantified answer; solar hasn't yet. |
-| **Both** | — | Recompute the Germany Dunkelflaute combined-CF once reconstruction finishes, using the real boundary + Mockert's exact weights + the corrected event-construction rule — the existing `dunkelflaute/scripts/compute_germany_combined_cf.py` still needs those three fixes ported over from the ERA5-side pipeline. |
+| **Both** | — | Done: Germany combined CF and Mockert events for 1950C and 2080C (real boundary, Mockert weights, corrected event rule) are in `dunkelflaute/results/` — see `report_dunkelflaute.html`, built by `dunkelflaute/scripts/dart/compute_germany_dunkelflaute_dart_mockert.py`. The older `dunkelflaute/scripts/compute_germany_combined_cf.py` is superseded. |
 
 ---
 
@@ -341,7 +302,7 @@ solar/
 ├── data/
 │   ├── era5/, era5_1h/, era5_3h_mean/    ERA5 downloads
 │   ├── analytical_tisr/                   precomputed TOA irradiance templates
-│   ├── dart_reconstructed/                DART output (reconstruction in progress)
+│   ├── dart_reconstructed/                FINAL DART output (1950C + 2080C years)
 │   └── training_cache_*/                  cached features (regenerable)
 ├── jobs/                 SLURM sbatch scripts
 ├── reports/              write-ups (md/pdf)
@@ -369,17 +330,40 @@ Every script `chdir`s to this `solar/` root on import (the `_root` snippet at th
 - **True-3h anomaly** (Finding 4 above) — unresolved, flagged rather than hidden.
 - **v3+ extrapolation caveat** — cells south of 60°S / above 3000 m are extrapolated, not validated.
 - **Untested cross-resolution transfer**: the model's being *pointwise* means it needs no regridding to run on DART's grid (see Grid Systems, above) — but that sidesteps, rather than answers, whether the relationship it learned actually holds at a different resolution. ERA5's cloud fractions at 0.25° are area averages over a much larger footprint (~28 km) than DART's ~9 km native cells; if the true cloud–clearness relationship is nonlinear in sub-grid cloud heterogeneity — plausible, since a partly-cloudy coarse cell and a genuinely overcast fine cell can share the same mean `tcc` but very different `kt` — a model fit on coarser, more-averaged ERA5 inputs could behave differently on DART's less-averaged fields. The wind side already ran this exact style of check for its own resolution mismatch (`wind/README.md`'s z0 coarsening sensitivity test, costed at ~0.2–0.25 m/s RMSE); no analogous test has been run for solar. See Recommendations, below.
-- **DART reconstruction is in progress**, not complete, as of this writing — `data/dart_reconstructed/` currently mixes 1950C and 2080C years in one flat directory; splitting it into `dart_reconstructed_1950c/`/`_2080c/` is deferred until the jobs finish, so nothing gets moved out from under an active write.
+- **DART reconstruction is finished** (jobs complete) — `data/dart_reconstructed/` still mixes 1950C and 2080C years in one flat directory; splitting it into `dart_reconstructed_1950c/`/`_2080c/` is now possible but not yet done.
+- **DART output not yet checked** — monthly-sum residuals and CF ranges of the finished files have not been verified.
 
 ---
 
 ## 📊 Key Formulas
 
+**Model**
+
 ```
-Clearness index:        kt = ssrd / tisr                    (model's prediction target)
-Reconstructed ssrd:      ssrd_pred = kt_pred × tisr           (before rescale)
-Exact monthly rescale:   Σ ssrd_pred(month) ≡ Σ ssrd_real(month)   (hard constraint)
-Capacity factor:         CF = clip((ssrd / accum_seconds) / 1000, 0, 1)
+Clearness index:        kt = ssrd / tisr                          (prediction target)
+Cloud-radiative ratio:  T  = tsr / tisr                           (feature)
+Cos-zenith proxy:       mu = tisr / (Δt · S0)                     (feature)
+Reconstructed ssrd:     ssrd_pred = kt_pred × tisr                (before rescale)
+Exact monthly rescale:  Σ ssrd_pred(month) ≡ Σ ssrd_real(month)   (hard constraint)
+Capacity factor:        CF = clip((ssrd / accum_seconds) / 1000, 0, 1)
+```
+
+**`tisr` — analytic top-of-atmosphere irradiance** (`scripts/core/solar_geometry.py`; Spencer 1971 / Iqbal 1983)
+
+```
+γ      = 2π (doy − 1) / 365.25
+E0     = 1.000110 + 0.034221 cos γ + 0.001280 sin γ + 0.000719 cos 2γ + 0.000077 sin 2γ
+δ      = 0.006918 − 0.399912 cos γ + 0.070257 sin γ − 0.006758 cos 2γ + 0.000907 sin 2γ
+         − 0.002697 cos 3γ + 0.001480 sin 3γ
+EoT    = 229.18 (0.000075 + 0.001868 cos γ − 0.032077 sin γ − 0.014615 cos 2γ − 0.040890 sin 2γ)   [min]
+
+H      = (t_UTC[min] + 4·lon + EoT) / 4 − 180°          (hour angle)
+cos z  = max(0, sin φ sin δ + cos φ cos δ cos H)         (φ = latitude)
+
+I(t)   = S0 · E0(t) · cos z(t)                           S0 = 1361 W/m²   (instantaneous, W/m²)
+tisr(t) = Δt · (1/n) Σ_{k=0..n−1} I( t − Δt + (k + ½)·Δt/n )       [J/m²]
+          (midpoint rule over the Δt window ENDING at t; DART cells: Δt = 3 h, n = 8;
+           ERA5-grid function defaults: Δt = 1 h, n = 12)
 ```
 
 ---
