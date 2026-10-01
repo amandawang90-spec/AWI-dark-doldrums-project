@@ -219,6 +219,8 @@ Phase 7: Apply to DART (dart_reconstruct_year.py)
 
 v1 and v2 were never masked at all — their predictions over Antarctica, high mountains, etc. are just as "in-sample" as anywhere else, for better or worse. Starting at v3, the training mask excludes cells south of 60°S and above 3000 m; predictions there (all versions v3+) are extrapolated, not validated against held-out data specifically from those cells (see Key Finding 5 below). No version has ever excluded anything based on ocean/land, hemisphere, or country — the exclusion is purely the one lat/elevation mask.
 
+**Visual report**: [v4 vs v5 vs SMARD](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the direct head-to-head this table's v4/v5 row is drawn from: both versions scored against real ERA5 physics and real SMARD generation, Germany, Sep–Mar 2015–2026.
+
 ---
 
 ## 📐 Model Specification
@@ -264,7 +266,7 @@ All three numbers below are for Germany specifically — this is the SMARD compa
 
 The reconstruction doesn't just correlate well with ERA5 over Germany — it matches real ERA5's own ability to predict the real German grid. The remaining gap to SMARD belongs to ERA5 itself, not to the reconstruction. Whether this holds up equally well elsewhere in the world is untested — there's no real-generation ground truth outside Germany in this repo to check it against.
 
-**Visual reports**: [Recon vs SMARD](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the published comparison this table's numbers come from, single-snapshot. [v5 vs ERA5 vs SMARD, 2015–2026](https://claude.ai/artifact/ThqZ2FGwKCWeYHTUAYHPzV) — the same check run year by year across the full decade instead of pooled, plus the onshore/offshore/combined breakdown that feeds Phase 6's literature validation.
+**Visual report**: [v5 vs ERA5 vs SMARD, 2015–2026](https://claude.ai/artifact/ThqZ2FGwKCWeYHTUAYHPzV) — this table's numbers, run year by year across the full decade instead of pooled, plus the onshore/offshore/combined breakdown that feeds Phase 6's literature validation. (The v4-vs-v5 comparison this table draws the v5 row from is linked under Model Roadmap, above.)
 
 ### 4. One finding remains open, stated rather than hidden
 
