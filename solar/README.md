@@ -188,6 +188,10 @@ Phase 7: Apply to DART (dart_reconstruct_year.py)
   - dart_reconstruct_year.py does NOT write error maps; the error_map_<stamp>.npz
     files in data/reconstructed_ssrd/ come from earlier reconstruct_and_diagnose.py
     runs. A check of the finished DART output itself has not been run yet.
+  - As of this fix, cells outside the trained region (south of 60S, above 3000m)
+    are written as NaN with an explicit valid_training_region flag, not an
+    unflagged extrapolated number -- see Known Data Quality Issues. Only applies
+    to runs after the fix; the 1950C/2080C output above predates it.
 ```
 
 **Visual reports — Phase 6, literature validation**: the combined-CF event frequency and duration checked against each paper's own published numbers, same real Germany boundary, same corrected event-construction rule each time.
@@ -280,7 +284,7 @@ A genuine-3-hour ERA5 variant (`era5_true3h`, built by direct summation of nativ
 
 ### 5. v3 and later carry an unvalidated-extrapolation caveat
 
-The training mask excludes cells south of 60°S and above 3000 m elevation. Predictions in those cells are extrapolated by the model, not validated against held-out data there specifically.
+The training mask excludes cells south of 60°S and above 3000 m elevation. Predictions there are extrapolated by the model, not validated against held-out data specifically from those cells. The evaluation scripts that actually score v3/v4/v5 (`evaluate_v3_rescaled.py`, `evaluate_v4_vs_all.py`, `dart_winter_eval.py`) already apply this same mask when computing their statistics, so this doesn't contaminate any reported accuracy number. It did, however, go unflagged in the DART reconstruction's actual output data — `dart_reconstruct_year.py` now writes NaN for these cells (plus a `valid_training_region` flag) instead of an unflagged extrapolated number; this only applies to runs *after* that fix, not the 1950C/2080C output already on disk. Not relevant to this project's own domains either way — Germany and South Korea both sit well inside the trained region.
 
 ---
 
