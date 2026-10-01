@@ -190,6 +190,12 @@ Phase 7: Apply to DART (dart_reconstruct_year.py)
     runs. A check of the finished DART output itself has not been run yet.
 ```
 
+**Visual reports — Phase 6, literature validation**: the combined-CF event frequency and duration checked against each paper's own published numbers, same real Germany boundary, same corrected event-construction rule each time.
+
+- [Mockert Comparison](https://claude.ai/artifact/54xCd9Uaf2QZiD9jRb4yQm) — 48h rolling-mean combined CF < 6%, their exact window-expansion event rule, their capacity weights.
+- [Li Comparison](https://claude.ai/artifact/3W6FQWUhVoSF8rKKxXR9pk) — instantaneous wind CF < 20% and solar CF < 20%, sustained > 24h, no smoothing.
+- [Kaspar and Lohmann Comparison](https://claude.ai/artifact/5j1r6dcDGJukME3RfFsLPL) — Kaspar et al. (2019), the paper Mockert's own threshold was calibrated against; and Lohmann et al. (2025)'s finding that this whole family of CF-threshold definitions, including the ones above, are weak predictors of real grid stress next to residual-load-based methods.
+
 ### Scope: what's global vs. what's Germany-only
 
 | Phase | Script(s) | Scope |
