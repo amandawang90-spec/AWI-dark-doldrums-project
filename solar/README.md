@@ -272,9 +272,7 @@ All three numbers below are for Germany specifically — this is the SMARD compa
 | v5 reconstruction vs. real SMARD | 0.931 |
 | **Real ERA5 vs. real SMARD** | **0.931** |
 
-The reconstruction doesn't just correlate well with ERA5 over Germany — it matches real ERA5's own ability to predict the real German grid. The remaining gap to SMARD belongs to ERA5 itself, not to the reconstruction. Whether this holds up equally well elsewhere in the world is untested — there's no real-generation ground truth outside Germany in this repo to check it against.
-
-**Visual report**: [v5 vs ERA5 vs SMARD, 2015–2026](https://claude.ai/artifact/ThqZ2FGwKCWeYHTUAYHPzV) — this table's numbers, run year by year across the full decade instead of pooled, plus the onshore/offshore/combined breakdown that feeds Phase 6's literature validation. (The v4-vs-v5 comparison this table draws the v5 row from is linked under Model Roadmap, above.)
+The reconstruction doesn't just correlate well with ERA5 over Germany — it matches real ERA5's own ability to predict the real German grid. The remaining gap to SMARD belongs to ERA5 itself, not to the reconstruction. Whether this holds up equally well elsewhere in the world is untested — there's no real-generation ground truth outside Germany in this repo to check it against. Both visual reports behind this table are linked under Model Roadmap, above.
 
 ### 4. One finding remains open, stated rather than hidden
 
