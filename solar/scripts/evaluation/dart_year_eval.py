@@ -102,7 +102,7 @@ def main():
 
     # ---- read the tisr template ONCE, keeping only the time steps the requested months need ----
     year_start = np.datetime64(f"{y}-01-01T03:00:00", "s")
-    tpl = f"{TEMPLATE_DIR}/tisr_template_{'366' if is_leap(y) else '365'}day.nc"
+    tpl = f"{TEMPLATE_DIR}/tisr_template_dart_{'366' if is_leap(y) else '365'}day.nc"
     ds = xr.open_dataset(tpl)
     nt_year = ds.sizes["time_counter"]
     idx_by_month = {}

@@ -34,8 +34,8 @@ templates from a ~4.3 hour single-threaded, float64 estimate down to minutes.
 
 OUTPUT
 ------
-data/analytical_tisr/tisr_template_365day.nc   (ordinary year, reference 2001)
-data/analytical_tisr/tisr_template_366day.nc   (leap year,     reference 2000)
+data/dart_analytical_tisr/tisr_template_dart_365day.nc (ordinary year, reference 2001)
+data/dart_analytical_tisr/tisr_template_dart_366day.nc (leap year,     reference 2000)
 Both on DART's real native grid (6,599,680 cells, read from an actual DART
 file so it's guaranteed identical to what the reconstruction will index into),
 dt_seconds=10800 matching DART's real tsr/ssrd 3-hour accumulation window
@@ -64,7 +64,7 @@ import xarray as xr
 
 from solar_geometry import toa_irradiance_accumulated_cells
 
-OUT_DIR = "data/analytical_tisr"
+OUT_DIR = "data/dart_analytical_tisr"
 # NOT /tmp: on compute nodes that's a tmpfs capped at 63 GB (the login node's
 # /tmp is a real 218 GB disk -- easy to miss, since it looked fine there).
 # Dispatching all jobs to the pool at once meant up to N_WORKERS*chunk-size
@@ -170,7 +170,7 @@ def build_one(ref_year, ndays, tag, lat, lon, n_cells):
     doing anything, at the cost of needing ~77 GB of scratch space to hold all
     66 chunks before the write pass (fine on the project's scratch filesystem).
     """
-    target = f"{OUT_DIR}/tisr_template_{tag}.nc"
+    target = f"{OUT_DIR}/tisr_template_dart_{tag}.nc"
     log(f"--- {tag} (reference year {ref_year}, {ndays} days) -> {target}")
 
     times = (np.datetime64(f"{ref_year}-01-01T03:00:00", "s")

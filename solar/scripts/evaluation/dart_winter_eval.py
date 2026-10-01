@@ -120,7 +120,7 @@ def main():
     idx_by_stamp = {}
     for stamp in stamps:
         y = int(stamp[:4])
-        tpl = f"{TEMPLATE_DIR}/tisr_template_{'366' if is_leap(y) else '365'}day.nc"
+        tpl = f"{TEMPLATE_DIR}/tisr_template_dart_{'366' if is_leap(y) else '365'}day.nc"
         templates.setdefault(tpl, [])
         year_start = np.datetime64(f"{y}-01-01T03:00:00", "s")
         tt = xr.open_dataset(f"{d}/atm_reduced_3h_tcc_3h_{stamp}-{stamp}.nc").time_counter.values

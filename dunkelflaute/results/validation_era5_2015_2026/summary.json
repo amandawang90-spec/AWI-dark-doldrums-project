@@ -1,0 +1,125 @@
+{
+ "summary": {
+  "n_winters": 11,
+  "winters": "2016\u20132026",
+  "n_events": 62,
+  "events_per_winter": 5.64,
+  "events_per_winter_sd": 1.8,
+  "median_dur_days": 3.44,
+  "mean_dur_days": 3.96,
+  "max_dur_days": 12.12,
+  "flagged_pct": 10.52,
+  "mean_cf_combined": 0.186,
+  "mean_cf_solar": 0.072,
+  "mean_cf_onshore": 0.252,
+  "mean_cf_offshore": 0.481,
+  "events_trend_per_decade": -2.91,
+  "events_trend_p": 0.09,
+  "cf_trend_per_decade": -0.0105,
+  "cf_trend_p": 0.6,
+  "winters_without_event": 0,
+  "events_per_winter_era5_real": 6.82,
+  "events_per_winter_smard": 5.82
+ },
+ "per_winter": [
+  {
+   "winter": 2016,
+   "n_events": 6,
+   "flagged_days": 22.125,
+   "flagged_pct": 10.387323943661972,
+   "longest_days": 6.25,
+   "mean_cf": 0.1926042250895052,
+   "min_roll": 0.03528775990124673
+  },
+  {
+   "winter": 2017,
+   "n_events": 9,
+   "flagged_days": 38.875,
+   "flagged_pct": 18.337264150943398,
+   "longest_days": 8.5,
+   "mean_cf": 0.15966797830641363,
+   "min_roll": 0.02897882238479638
+  },
+  {
+   "winter": 2018,
+   "n_events": 7,
+   "flagged_days": 24.875,
+   "flagged_pct": 11.733490566037736,
+   "longest_days": 4.5,
+   "mean_cf": 0.20144916740971625,
+   "min_roll": 0.027359153855653708
+  },
+  {
+   "winter": 2019,
+   "n_events": 5,
+   "flagged_days": 16.0,
+   "flagged_pct": 7.547169811320755,
+   "longest_days": 4.125,
+   "mean_cf": 0.20147963635858587,
+   "min_roll": 0.042107606785813524
+  },
+  {
+   "winter": 2020,
+   "n_events": 5,
+   "flagged_days": 15.0,
+   "flagged_pct": 7.042253521126761,
+   "longest_days": 3.875,
+   "mean_cf": 0.21336768167336906,
+   "min_roll": 0.029845326027140955
+  },
+  {
+   "winter": 2021,
+   "n_events": 6,
+   "flagged_days": 24.25,
+   "flagged_pct": 11.43867924528302,
+   "longest_days": 6.125,
+   "mean_cf": 0.1636266941156873,
+   "min_roll": 0.03372487211915275
+  },
+  {
+   "winter": 2022,
+   "n_events": 7,
+   "flagged_days": 22.25,
+   "flagged_pct": 10.495283018867925,
+   "longest_days": 3.75,
+   "mean_cf": 0.18503225345141067,
+   "min_roll": 0.030494068167303438
+  },
+  {
+   "winter": 2023,
+   "n_events": 4,
+   "flagged_days": 22.625,
+   "flagged_pct": 10.672169811320755,
+   "longest_days": 10.5,
+   "mean_cf": 0.18365753622504044,
+   "min_roll": 0.033196165628781193
+  },
+  {
+   "winter": 2024,
+   "n_events": 2,
+   "flagged_days": 7.0,
+   "flagged_pct": 3.2863849765258215,
+   "longest_days": 3.875,
+   "mean_cf": 0.21321485984618613,
+   "min_roll": 0.0337908423619503
+  },
+  {
+   "winter": 2025,
+   "n_events": 6,
+   "flagged_days": 36.0,
+   "flagged_pct": 16.9811320754717,
+   "longest_days": 12.125,
+   "mean_cf": 0.1656159329838692,
+   "min_roll": 0.021681716964505292
+  },
+  {
+   "winter": 2026,
+   "n_events": 5,
+   "flagged_days": 16.5,
+   "flagged_pct": 7.783018867924528,
+   "longest_days": 5.375,
+   "mean_cf": 0.17043768741363166,
+   "min_roll": 0.02415123314699591
+  }
+ ]
+}

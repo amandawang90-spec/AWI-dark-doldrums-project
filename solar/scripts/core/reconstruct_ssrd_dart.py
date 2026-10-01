@@ -6,7 +6,7 @@ against DART's own real monthly ssrd.
 WHAT THIS DOES AND DOESN'T DO YET
 -------------------------------------------------------------------------------
 Does: read DART's real tcc/hcc/mcc/lcc/tsr (reduced grid, 3-hourly), look up
-tisr for those exact timestamps from tisr_template_{365,366}day.nc, apply the
+tisr for those exact timestamps from tisr_template_dart_{365,366}day.nc, apply the
 saved model, and report how the reconstructed monthly-mean GLOBAL AREA-WEIGHTED
 MEAN compares to DART's own real monthly ssrd (remapped grid) for the same
 month -- a coarse but meaningful first check.
@@ -49,7 +49,7 @@ DT_DART = 10800.0          # DART's real tsr/ssrd accumulation window (3 h) -- s
                            # reconstruct_ssrd.py's DT comment for how this was confirmed
 MONTHLY_ANCHOR_DIVISOR = 10800.0   # DART monthly ssrd: mean of 3h accumulations
 DAY_MU = 0.02
-TEMPLATE_DIR = "data/analytical_tisr"
+TEMPLATE_DIR = "data/dart_analytical_tisr"
 
 
 def log(msg):
@@ -86,7 +86,7 @@ def lookup_tisr(lat, lon, times):
     template, by direct index -- never recomputed.
     """
     year = times[0].astype("datetime64[Y]").astype(int) + 1970
-    template = f"{TEMPLATE_DIR}/tisr_template_{'366' if is_leap(year) else '365'}day.nc"
+    template = f"{TEMPLATE_DIR}/tisr_template_dart_{'366' if is_leap(year) else '365'}day.nc"
     ds = xr.open_dataset(template)
 
     # index = offset from Jan 1 03:00 of THIS year, in 3h steps -- matches the

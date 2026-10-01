@@ -40,7 +40,7 @@ sys.path.insert(0, __file__.rsplit("/scripts/", 1)[0] + "/scripts")
 from core.domain import DomainMasks, BBOX_GERMANY
 from core.capacity_factor import wind_speed, wind_cf, solar_cf, ONSHORE, OFFSHORE, SSRD_ACCUM_SECONDS_DART
 
-SOLAR_DIR = "solar/data/dart_reconstructed/{year}"
+SOLAR_DIR = "solar/data/dart_reconstructed_1950c/{year}"
 SOLAR_FILE = "ssrd_reduced_3h_{year}{month:02d}-{year}{month:02d}.nc"
 WIND_DIR = "wind/data/dart_1950c_100m"
 WIND_FILE = "u100v100_{year}{month:02d}.nc"

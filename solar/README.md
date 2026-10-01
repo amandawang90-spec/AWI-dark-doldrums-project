@@ -315,8 +315,10 @@ solar/
 ├── reference/           OpenIFS TSIR source + call-chain notes
 ├── data/
 │   ├── era5/, era5_1h/, era5_3h_mean/    ERA5 downloads
-│   ├── analytical_tisr/                   precomputed TOA irradiance templates
-│   ├── dart_reconstructed/                FINAL DART output (1950C + 2080C years)
+│   ├── dart_analytical_tisr/              tisr_template_dart_{365,366}day.nc  (6.6M cells, 3 h)
+│   ├── era5_analytical_tisr/              tisr_template_era5_{365,366}day.nc  (721x1440, 3 h)
+│   ├── dart_reconstructed_1950c/          FINAL DART output, 1950C (<year>/ssrd_reduced_3h_*.nc)
+│   ├── dart_reconstructed_2080c/          FINAL DART output, 2080C
 │   └── training_cache_*/                  cached features (regenerable)
 ├── jobs/                 SLURM sbatch scripts
 ├── reports/              write-ups (md/pdf)
@@ -344,7 +346,7 @@ Every script `chdir`s to this `solar/` root on import (the `_root` snippet at th
 - **True-3h anomaly** (Finding 4 above) — unresolved, flagged rather than hidden.
 - **v3+ extrapolation caveat** — cells south of 60°S / above 3000 m are extrapolated, not validated.
 - **Untested cross-resolution transfer**: the model's being *pointwise* means it needs no regridding to run on DART's grid (see Grid Systems, above) — but that sidesteps, rather than answers, whether the relationship it learned actually holds at a different resolution. ERA5's cloud fractions at 0.25° are area averages over a much larger footprint (~28 km) than DART's ~9 km native cells; if the true cloud–clearness relationship is nonlinear in sub-grid cloud heterogeneity — plausible, since a partly-cloudy coarse cell and a genuinely overcast fine cell can share the same mean `tcc` but very different `kt` — a model fit on coarser, more-averaged ERA5 inputs could behave differently on DART's less-averaged fields. The wind side already ran this exact style of check for its own resolution mismatch (`wind/README.md`'s z0 coarsening sensitivity test, costed at ~0.2–0.25 m/s RMSE); no analogous test has been run for solar. See Recommendations, below.
-- **DART reconstruction is finished** (jobs complete) — `data/dart_reconstructed/` still mixes 1950C and 2080C years in one flat directory; splitting it into `dart_reconstructed_1950c/`/`_2080c/` is now possible but not yet done.
+- **DART reconstruction is finished** (jobs complete) — `data/dart_reconstructed_1950c/` and `data/dart_reconstructed_2080c/` hold the results, one `<year>/` folder per year.
 - **DART output not yet checked** — monthly-sum residuals and CF ranges of the finished files have not been verified.
 
 ---

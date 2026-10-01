@@ -9,7 +9,7 @@ The exact-sum constraint (memory rule: rescaling is part of the model) is verifi
 and logged for every month.
 
 Usage: python3 dart_reconstruct_year.py <run_dir> <year> [--cell-limit N]
-Output: data/dart_reconstructed/<year>/ssrd_reduced_3h_<stamp>-<stamp>.nc
+Output: data/dart_reconstructed_<1950c|2080c>/<year>/ssrd_reduced_3h_<stamp>-<stamp>.nc
 """
 import os as _os, sys as _sys
 _root = _os.path.dirname(_os.path.abspath(__file__))
@@ -70,7 +70,8 @@ def main():
     args = ap.parse_args()
     y = args.year
     d = f"{args.run_dir}/outdata/oifs"
-    out_dir = args.out or f"data/dart_reconstructed/{y}"
+    run_tag = "2080c" if "2080" in os.path.basename(args.run_dir.rstrip("/")).lower() else "1950c"
+    out_dir = args.out or f"data/dart_reconstructed_{run_tag}/{y}"
     os.makedirs(out_dir, exist_ok=True)
     N = args.cell_limit or None
     sl = slice(0, N)
@@ -102,7 +103,7 @@ def main():
 
     # ---- tisr template, read ONCE for the whole year (all 5 months share it) ----
     year_start = np.datetime64(f"{y}-01-01T03:00:00", "s")
-    tpl = f"{TEMPLATE_DIR}/tisr_template_{'366' if is_leap(y) else '365'}day.nc"
+    tpl = f"{TEMPLATE_DIR}/tisr_template_dart_{'366' if is_leap(y) else '365'}day.nc"
     ds = xr.open_dataset(tpl)
     nt_year = ds.sizes["time_counter"]
     idx_by_month = {}
@@ -179,7 +180,7 @@ def main():
         v.units = "J m-2"
         v.long_name = "Reconstructed surface solar radiation downwards, 3-hour accumulation"
         v.comment = ("v5-area-weighted ML model (kt=ssrd/tisr from cloud fractions, tsr, solar geometry) "
-                     "+ exact constrained monthly rescale to DART's own monthly ssrd (data/analytical_tisr "
+                     "+ exact constrained monthly rescale to DART's own monthly ssrd (data/dart_analytical_tisr "
                      "templates, rescale.py). Monthly sum matches DART's real value exactly for valid cells "
                      f"(see log). kt capped at {KMAX}; night is exactly zero. "
                      "NaN south of 60S or above 3000m elevation -- outside the region the model was "

@@ -1,0 +1,177 @@
+{
+ "summary": {
+  "n_winters": 17,
+  "winters": "1953\u20131969",
+  "n_events": 59,
+  "events_per_winter": 3.47,
+  "events_per_winter_sd": 1.84,
+  "median_dur_days": 2.88,
+  "mean_dur_days": 3.45,
+  "max_dur_days": 8.0,
+  "flagged_pct": 5.64,
+  "mean_cf_combined": 0.201,
+  "mean_cf_solar": 0.079,
+  "mean_cf_onshore": 0.272,
+  "mean_cf_offshore": 0.507,
+  "events_trend_per_decade": -1.69,
+  "events_trend_p": 0.06,
+  "cf_trend_per_decade": 0.0128,
+  "cf_trend_p": 0.06,
+  "winters_without_event": 0
+ },
+ "per_winter": [
+  {
+   "winter": 1953,
+   "n_events": 5,
+   "flagged_days": 14.375,
+   "flagged_pct": 6.78066037735849,
+   "longest_days": 3.75,
+   "mean_cf": 0.1940025899264143,
+   "min_roll": 0.03603596938007314
+  },
+  {
+   "winter": 1954,
+   "n_events": 4,
+   "flagged_days": 17.25,
+   "flagged_pct": 8.13679245283019,
+   "longest_days": 6.625,
+   "mean_cf": 0.18742294045768532,
+   "min_roll": 0.040934766541104395
+  },
+  {
+   "winter": 1955,
+   "n_events": 9,
+   "flagged_days": 24.25,
+   "flagged_pct": 11.43867924528302,
+   "longest_days": 3.625,
+   "mean_cf": 0.18948613260644587,
+   "min_roll": 0.036136958879898984
+  },
+  {
+   "winter": 1956,
+   "n_events": 4,
+   "flagged_days": 12.875,
+   "flagged_pct": 6.044600938967136,
+   "longest_days": 5.375,
+   "mean_cf": 0.1994974628776447,
+   "min_roll": 0.052480698406310644
+  },
+  {
+   "winter": 1957,
+   "n_events": 3,
+   "flagged_days": 8.625,
+   "flagged_pct": 4.068396226415095,
+   "longest_days": 3.125,
+   "mean_cf": 0.17241925544686007,
+   "min_roll": 0.03969590230212461
+  },
+  {
+   "winter": 1958,
+   "n_events": 2,
+   "flagged_days": 8.75,
+   "flagged_pct": 4.127358490566038,
+   "longest_days": 4.5,
+   "mean_cf": 0.2074216047204409,
+   "min_roll": 0.04296670581101747
+  },
+  {
+   "winter": 1959,
+   "n_events": 1,
+   "flagged_days": 7.375,
+   "flagged_pct": 3.4787735849056602,
+   "longest_days": 7.375,
+   "mean_cf": 0.21500318413537806,
+   "min_roll": 0.030226156985589725
+  },
+  {
+   "winter": 1960,
+   "n_events": 3,
+   "flagged_days": 12.25,
+   "flagged_pct": 5.751173708920188,
+   "longest_days": 7.0,
+   "mean_cf": 0.21132678288513265,
+   "min_roll": 0.026401492302341012
+  },
+  {
+   "winter": 1961,
+   "n_events": 5,
+   "flagged_days": 23.75,
+   "flagged_pct": 11.202830188679245,
+   "longest_days": 8.0,
+   "mean_cf": 0.20477662393763102,
+   "min_roll": 0.02618723415773694
+  },
+  {
+   "winter": 1962,
+   "n_events": 4,
+   "flagged_days": 11.25,
+   "flagged_pct": 5.306603773584905,
+   "longest_days": 3.25,
+   "mean_cf": 0.20847707988063952,
+   "min_roll": 0.046108238579090965
+  },
+  {
+   "winter": 1963,
+   "n_events": 4,
+   "flagged_days": 15.875,
+   "flagged_pct": 7.488207547169812,
+   "longest_days": 6.375,
+   "mean_cf": 0.18933722132374248,
+   "min_roll": 0.04375416468617921
+  },
+  {
+   "winter": 1964,
+   "n_events": 2,
+   "flagged_days": 7.75,
+   "flagged_pct": 3.6384976525821595,
+   "longest_days": 4.75,
+   "mean_cf": 0.1875200306985668,
+   "min_roll": 0.04065058832055257
+  },
+  {
+   "winter": 1965,
+   "n_events": 3,
+   "flagged_days": 10.5,
+   "flagged_pct": 4.952830188679245,
+   "longest_days": 5.625,
+   "mean_cf": 0.20420402935990298,
+   "min_roll": 0.022404828855238534
+  },
+  {
+   "winter": 1966,
+   "n_events": 3,
+   "flagged_days": 8.0,
+   "flagged_pct": 3.7735849056603774,
+   "longest_days": 2.75,
+   "mean_cf": 0.2131612198939266,
+   "min_roll": 0.045076655712010805
+  },
+  {
+   "winter": 1967,
+   "n_events": 1,
+   "flagged_days": 2.625,
+   "flagged_pct": 1.2382075471698113,
+   "longest_days": 2.625,
+   "mean_cf": 0.22486629959646587,
+   "min_roll": 0.051695099291311664
+  },
+  {
+   "winter": 1968,
+   "n_events": 3,
+   "flagged_days": 10.125,
+   "flagged_pct": 4.753521126760563,
+   "longest_days": 4.25,
+   "mean_cf": 0.21867763438008286,
+   "min_roll": 0.03815780763369858
+  },
+  {
+   "winter": 1969,
+   "n_events": 3,
+   "flagged_days": 8.0,
+   "flagged_pct": 3.7735849056603774,
+   "longest_days": 2.875,
+   "mean_cf": 0.1949909324928468,
+   "min_roll": 0.047868991649520964
+  }
+ ]
+}
