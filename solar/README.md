@@ -230,7 +230,7 @@ Phase 7: Apply to DART (dart_reconstruct_year.py)
 v1 and v2 were never masked at all — their predictions over Antarctica, high mountains, etc. are just as "in-sample" as anywhere else, for better or worse. Starting at v3, the training mask excludes cells south of 60°S and above 3000 m; predictions there (all versions v3+) are extrapolated, not validated against held-out data specifically from those cells (see Key Finding 5 below). No version has ever excluded anything based on ocean/land, hemisphere, or country — the exclusion is purely the one lat/elevation mask.
 
 **Visual reports**:
-- [v4 vs v5 vs SMARD, 2015–2026](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the direct head-to-head this table's v4/v5 row is drawn from: both versions scored against real ERA5 physics and real SMARD generation, Germany, Sep–Mar 2015–2026, pooled.
+- [v4 vs v5 vs era5 vs smard, 2015–2026](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the direct head-to-head this table's v4/v5 row is drawn from: both versions scored against real ERA5 physics and real SMARD generation, Germany, Sep–Mar 2015–2026, pooled.
 - [v5 vs ERA5 vs SMARD, 2015–2026](https://claude.ai/artifact/ThqZ2FGwKCWeYHTUAYHPzV) — the same v5 numbers, unpooled: year by year across the decade instead of one pooled figure, plus the onshore/offshore/combined breakdown that feeds Phase 6's literature validation.
 
 ---
@@ -296,7 +296,7 @@ The training mask excludes cells south of 60°S and above 3000 m elevation. Pred
 | **2080C** | Reconstruction finished (91/91 months) | No ground truth exists for a future climate. Frame any result as *"under the assumption that today's cloud-to-irradiance physics holds"*, not as validated. |
 | **Both** | — | Cheap, concrete check before trusting either: train on a subset of ERA5 years, test on the years furthest away in time, as a proxy for temporal distribution-shift risk. Large skill degradation with distance = a real warning sign; little movement = actual supporting evidence, not just an assumption. |
 | **Both** | Not yet run | A spatial-resolution counterpart to the check above: coarsen ERA5's own 0.25° cloud fractions further (e.g. to ~1°) and see how much the fitted kt-relationship's skill degrades, as a proxy for whether training-resolution (~28 km) vs. application-resolution (~9 km) is a real risk here — the wind side already ran this exact style of test for z0 and got a small, quantified answer; solar hasn't yet. |
-| **Both** | — | Done: Germany combined CF and Mockert events for 1950C and 2080C (real boundary, Mockert weights, corrected event rule) are in `dunkelflaute/results/` — see `report_dunkelflaute.html`, built by `dunkelflaute/scripts/dart/compute_germany_dunkelflaute_dart_mockert.py`. The older `dunkelflaute/scripts/compute_germany_combined_cf.py` is superseded. |
+| **Both** | — | Done: Germany combined CF and Mockert events for 1950C and 2080C (real boundary, Mockert weights, corrected event rule) are in `dunkelflaute/results/` — see `report_dunkelflaute.html`, built by `dunkelflaute/scripts/dart/compute_germany_dunkelflaute_dart_mockert.py`. The older, superseded `dunkelflaute/scripts/compute_germany_combined_cf.py` has been removed (2026-10-01 repo cleanup). |
 
 ---
 
