@@ -264,6 +264,8 @@ All three numbers below are for Germany specifically — this is the SMARD compa
 
 The reconstruction doesn't just correlate well with ERA5 over Germany — it matches real ERA5's own ability to predict the real German grid. The remaining gap to SMARD belongs to ERA5 itself, not to the reconstruction. Whether this holds up equally well elsewhere in the world is untested — there's no real-generation ground truth outside Germany in this repo to check it against.
 
+**Visual report**: [Recon vs SMARD](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the published comparison this table's numbers come from.
+
 ### 4. One finding remains open, stated rather than hidden
 
 A genuine-3-hour ERA5 variant (`era5_true3h`, built by direct summation of native hourly data rather than the accumulation-field trick) scores *slightly worse* against SMARD than the original 1-hour-sampled data — even after the SMARD alignment fix. Not yet explained.
