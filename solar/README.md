@@ -225,7 +225,9 @@ Phase 7: Apply to DART (dart_reconstruct_year.py)
 
 v1 and v2 were never masked at all — their predictions over Antarctica, high mountains, etc. are just as "in-sample" as anywhere else, for better or worse. Starting at v3, the training mask excludes cells south of 60°S and above 3000 m; predictions there (all versions v3+) are extrapolated, not validated against held-out data specifically from those cells (see Key Finding 5 below). No version has ever excluded anything based on ocean/land, hemisphere, or country — the exclusion is purely the one lat/elevation mask.
 
-**Visual report**: [v4 vs v5 vs SMARD](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the direct head-to-head this table's v4/v5 row is drawn from: both versions scored against real ERA5 physics and real SMARD generation, Germany, Sep–Mar 2015–2026.
+**Visual reports**:
+- [v4 vs v5 vs SMARD](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the direct head-to-head this table's v4/v5 row is drawn from: both versions scored against real ERA5 physics and real SMARD generation, Germany, Sep–Mar 2015–2026, pooled.
+- [v5 vs ERA5 vs SMARD, 2015–2026](https://claude.ai/artifact/ThqZ2FGwKCWeYHTUAYHPzV) — the same v5 numbers, unpooled: year by year across the decade instead of one pooled figure, plus the onshore/offshore/combined breakdown that feeds Phase 6's literature validation.
 
 ---
 
