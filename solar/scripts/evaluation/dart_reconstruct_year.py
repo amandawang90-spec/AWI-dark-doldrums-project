@@ -36,6 +36,30 @@ FEATURES = ["T", "tcc", "hcc", "mcc", "lcc", "mu"]
 MONTHS = [1, 2, 3, 9, 10, 11, 12]     # Sep-Mar extended winter within THIS calendar year
 KMAX = 1.1
 TB = 8
+# Same exclusion the model was TRAINED under (train_v5_model.py: LAT_MIN, ELEV_MAX =
+# -60.0, 3000) -- predictions outside this mask are extrapolation, never validated.
+# Not relevant to this project's own domains (Germany, South Korea both sit well
+# inside it), but writing a real-looking number there anyway is misleading for
+# anyone who doesn't already know to discount those cells. Written as NaN instead.
+LAT_MIN, ELEV_MAX = -60.0, 3000.0
+REGRID_INDEX = "/work/ab0995/a270321/AWI-dark-doldrums-project/wind/data/results/tco1279_era5_regrid_index.npz"
+ERA5_OROGRAPHY = "data/static/era5_geopotential_surface.nc"
+
+
+def dart_elevation_mask(lat, sl):
+    """True where this DART cell is INSIDE the trained region (lat>=LAT_MIN and
+    elevation<=ELEV_MAX). Elevation isn't a DART field -- brought in via the
+    wind team's precomputed ERA5->TCo1279 nearest-neighbour regrid index (verified
+    bit-for-bit identical cell ordering to this script's own lat/lon, same grid).
+    sl is the same cell slice main() applies everywhere (identity unless
+    --cell-limit is set, e.g. for a quick test run on a cell subset)."""
+    idx = np.load(REGRID_INDEX, allow_pickle=True)
+    i, j, tco_lat = idx["i"][sl], idx["j"][sl], idx["tco_lat"][sl]
+    assert len(tco_lat) == len(lat) and np.max(np.abs(tco_lat - lat)) == 0, \
+        "regrid index cell ordering does not match this run's lat array"
+    z = xr.open_dataset(ERA5_OROGRAPHY)["z"].squeeze().values.astype("float32") / 9.80665
+    elev = z[i, j]
+    return (lat >= LAT_MIN) & (elev <= ELEV_MAX)
 
 
 def main():
@@ -71,6 +95,10 @@ def main():
     ncell = lat.size
     log(f"year {y}: {ncell:,} cells, months {months_avail}" +
         (f" (skipped {sorted(set(MONTHS) - set(months_avail))}, missing source data)" if len(months_avail) < len(MONTHS) else ""))
+
+    valid_mask = dart_elevation_mask(lat, sl)
+    log(f"year {y}: {100*(1-valid_mask.mean()):.2f}% of cells outside the trained region "
+        f"(lat<{LAT_MIN} or elevation>{ELEV_MAX:.0f}m) -- written as NaN, not extrapolated")
 
     # ---- tisr template, read ONCE for the whole year (all 5 months share it) ----
     year_start = np.datetime64(f"{y}-01-01T03:00:00", "s")
@@ -131,6 +159,11 @@ def main():
             f"max_kt={diag['max_kt_normal']:.3f} night_max={diag['night_max_normal']:.1e}")
         worst_rel_err = max(worst_rel_err, diag["max_rel_sum_err"])
 
+        # Mask applied to the OUTPUT only, after the rescale's own exact-sum check has
+        # already run over the full array -- doesn't touch the rescale numerics for
+        # valid cells, just blanks the never-validated ones before anything is written.
+        q_out = np.where(valid_mask[None, :], q, np.nan)
+
         out_path = f"{out_dir}/ssrd_reduced_3h_{tag}.nc"
         wds = nc.Dataset(out_path, "w", format="NETCDF4")
         wds.createDimension("time_counter", ntime); wds.createDimension("cell", ncell)
@@ -141,16 +174,17 @@ def main():
         wds.createVariable("lat", "f4", ("cell",))[:] = lat
         wds.createVariable("lon", "f4", ("cell",))[:] = lon
         v = wds.createVariable("ssrd", "f4", ("time_counter", "cell"), zlib=True, complevel=4,
-                               chunksizes=(ntime, min(100_000, ncell)))
-        v[:] = q.astype("float32")
+                               chunksizes=(ntime, min(100_000, ncell)), fill_value=np.nan)
+        v[:] = q_out.astype("float32")
         v.units = "J m-2"
         v.long_name = "Reconstructed surface solar radiation downwards, 3-hour accumulation"
-        v.comment = ("v3-area-weighted ML model (kt=ssrd/tisr from cloud fractions, tsr, solar geometry) "
+        v.comment = ("v5-area-weighted ML model (kt=ssrd/tisr from cloud fractions, tsr, solar geometry) "
                      "+ exact constrained monthly rescale to DART's own monthly ssrd (data/analytical_tisr "
-                     "templates, rescale.py). Monthly sum matches DART's real value exactly (see log). "
-                     f"kt capped at {KMAX}; night is exactly zero. "
-                     "CAVEAT: v3 was trained excluding cells south of 60S and above 3000 m elevation; "
-                     "predictions in those cells are extrapolated, not validated.")
+                     "templates, rescale.py). Monthly sum matches DART's real value exactly for valid cells "
+                     f"(see log). kt capped at {KMAX}; night is exactly zero. "
+                     "NaN south of 60S or above 3000m elevation -- outside the region the model was "
+                     "trained and validated on; see solar/README.md Key Finding 5.")
+        wds.createVariable("valid_training_region", "i1", ("cell",))[:] = valid_mask.astype("i1")
         wds.model = MODEL_PATH; wds.features = ", ".join(FEATURES)
         wds.close()
         for ds_ in list(dsv.values()) + [monthly]:
