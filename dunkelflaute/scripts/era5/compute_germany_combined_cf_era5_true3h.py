@@ -40,8 +40,8 @@ WIND_DIR = f"{_ROOT}/wind/data/era5/training_data"
 TRUE3H_DIR = f"{_ROOT}/dunkelflaute/smard_validation/data/era5_true3h"       # ssrd, tsr, genuine 3h
 LSM_PATH = f"{_ROOT}/wind/data/era5/era5_lsm_20260830_0000.nc"
 MODEL_PATH = f"{_ROOT}/solar/models/model_v3/area/model_kt_v3.joblib"
-LAND_PATH = f"{_ROOT}/boundaries/land.geojson"
-EEZ_PATH = f"{_ROOT}/boundaries/eez.geojson"
+LAND_PATH = f"{_ROOT}/boundaries/germany/germany_land.geojson"
+EEZ_PATH = f"{_ROOT}/boundaries/germany/germany_eez.geojson"
 
 TRUE3H_SECONDS = 3 * 3600.0   # genuine 3-hour accumulation, matching DART's SSRD_ACCUM_SECONDS_DART
 DAY_MU = 0.02

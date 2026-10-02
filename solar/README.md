@@ -162,7 +162,7 @@ Phase 4: Diagnose (per-cell RMSE, bias, error maps)
 Phase 5: Validate
   ├──► vs. real ERA5 ssrd (held out)     -- the SCRIPTS support global/regional
   │                                         scoring, but the headline number
-  │                                         quoted in Key Finding 3 (r=0.998) is
+  │                                         quoted in Key Finding 1 (r=0.998) is
   │                                         Germany-only -- no equivalent GLOBAL
   │                                         correlation figure has been computed
   │                                         and saved for v5. See Scope table below.
@@ -209,11 +209,11 @@ Phase 7: Apply to DART (dart_reconstruct_year.py)
 | 3. Constrained rescale | `rescale.py` | Global — no spatial logic |
 | 4. Diagnose | `rmse_maps*.py`, `diag_*.py` | Mostly global/1°, with Europe/Korea boxes at full resolution in `rmse_maps.py` |
 | 5. Validate — vs. ERA5 (**capability**) | `evaluate_era5_regional.py`, `evaluate_era5_winter.py`, `dart_year_eval.py` | Selectable: Global / Europe / Germany / Korea boxes |
-| 5. Validate — vs. ERA5 (**the actual quoted number**) | `germany_solar_cf_correlation_summary.json` | **Germany-only** — no global equivalent has been computed and saved for v5 |
+| 5. Validate — vs. ERA5 (**the actual quoted number**) | `models/model_v5/evaluation/germany_solar_cf_correlation_summary.json` | **Germany-only** — no global equivalent has been computed and saved for v5 |
 | 5. Validate — vs. SMARD | `dunkelflaute/smard_validation/` + `boundaries/` | **Germany-only**, unavoidably — SMARD has no equivalent dataset anywhere else in this repo |
 | 7. Apply to DART | `dart_reconstruct_year.py` | Global — full native grid, no region slice |
 
-**Takeaway**: the model is trained, rescaled, and applied to DART everywhere on Earth. Broad error diagnostics ran globally during development (Phase 4). But the one clean, quantified "does this actually work" check — the one checked against real-world grid generation, not just another reanalysis — has only ever been computed for Germany, because that's the only place SMARD exists. Key Finding 3's r=0.998/0.931 figures are both Germany numbers, paired against each other on purpose; neither is a global statistic.
+**Takeaway**: the model is trained, rescaled, and applied to DART everywhere on Earth. Broad error diagnostics ran globally during development (Phase 4). But the one clean, quantified "does this actually work" check — the one checked against real-world grid generation, not just another reanalysis — has only ever been computed for Germany, because that's the only place SMARD exists. Key Finding 1's r=0.998/0.931 figures are both Germany numbers, paired against each other on purpose; neither is a global statistic.
 
 ---
 
@@ -227,7 +227,7 @@ Phase 7: Apply to DART (dart_reconstruct_year.py)
 | v4 | All 12 months, 2015–2026 (136 months) | **Global minus** the same mask as v3 (lat ≥ −60°, elevation ≤ 3000 m) | **Fixes the accumulation-window bug** — genuine 3-hour-sum target | Reference (full-year evaluation) |
 | **v5** | **Sep–Mar, 2015–2025 (80 months)** | **Global minus** the same mask as v3/v4 | Same fix as v4, restricted to the season actually used downstream | **Current — use this** |
 
-v1 and v2 were never masked at all — their predictions over Antarctica, high mountains, etc. are just as "in-sample" as anywhere else, for better or worse. Starting at v3, the training mask excludes cells south of 60°S and above 3000 m; predictions there (all versions v3+) are extrapolated, not validated against held-out data specifically from those cells (see Key Finding 5 below). No version has ever excluded anything based on ocean/land, hemisphere, or country — the exclusion is purely the one lat/elevation mask.
+v1 and v2 were never masked at all — their predictions over Antarctica, high mountains, etc. are just as "in-sample" as anywhere else, for better or worse. Starting at v3, the training mask excludes cells south of 60°S and above 3000 m; predictions there (all versions v3+) are extrapolated, not validated against held-out data specifically from those cells (see Key Finding 2 below). No version has ever excluded anything based on ocean/land, hemisphere, or country — the exclusion is purely the one lat/elevation mask.
 
 **Visual reports**:
 - [v4 vs v5 vs era5 vs smard, 2015–2026](https://claude.ai/artifact/WZKEpqfxir2j9nsJsZ1yF2) — the direct head-to-head this table's v4/v5 row is drawn from: both versions scored against real ERA5 physics and real SMARD generation, Germany, Sep–Mar 2015–2026, pooled.
@@ -258,17 +258,7 @@ v1 and v2 were never masked at all — their predictions over Antarctica, high m
 
 ## 🔑 Key Findings
 
-### 1. The accumulation-window bug is why v4/v5 exist
-
-v1–v3 trained against ERA5 `ssrd` sampled as a **1-hour accumulation taken every 3 hours** — not the same quantity as a genuine 3-hour sum, which is what DART's own 3-hourly fields actually are. This was silent: v1–v3's validation numbers looked fine because they were being scored against the same (subtly wrong) kind of target they were trained on. v4 fixed it with `era5_3h_mean`, genuine 3-hour sums; v5 is the same fix, restricted to Sep–Mar.
-
-### 2. A second, independent bug looked like a model problem until diagnosed
-
-SMARD's hourly generation was originally resampled to 3-hourly with a forward-looking bin (`label="left"`), while ERA5's own accumulated fields are backward-looking. Fixing the resample convention alone raised the SMARD correlation from **~0.75 to ~0.97** — before touching the model at all.
-
-### 3. Current accuracy is essentially at the ERA5 ceiling (Germany — no global equivalent computed)
-
-All three numbers below are for Germany specifically — this is the SMARD comparison, and SMARD only exists for Germany. No global version of this table exists; see the Scope table above.
+### 1. Accuracy matches the ERA5 ceiling — in Germany, the one place it can be checked against the real grid
 
 | Comparison (Germany only) | r |
 |------------|---|
@@ -276,15 +266,41 @@ All three numbers below are for Germany specifically — this is the SMARD compa
 | v5 reconstruction vs. real SMARD | 0.931 |
 | **Real ERA5 vs. real SMARD** | **0.931** |
 
-The reconstruction doesn't just correlate well with ERA5 over Germany — it matches real ERA5's own ability to predict the real German grid. The remaining gap to SMARD belongs to ERA5 itself, not to the reconstruction. Whether this holds up equally well elsewhere in the world is untested — there's no real-generation ground truth outside Germany in this repo to check it against. Both visual reports behind this table are linked under Model Roadmap, above.
+The reconstruction matches real ERA5's own ability to predict the German grid — the remaining gap to SMARD is ERA5's, not the model's. Germany is where this is *checked*, not where the model *trains* (that's global, minus a mask — Finding 3); SMARD simply doesn't exist anywhere else to check against. Visual reports linked under Model Roadmap, above.
 
-### 4. One finding remains open, stated rather than hidden
+### 2. The raw model is already excellent — except in terrain it's never trained on
 
-A genuine-3-hour ERA5 variant (`era5_true3h`, built by direct summation of native hourly data rather than the accumulation-field trick) scores *slightly worse* against SMARD than the original 1-hour-sampled data — even after the SMARD alignment fix. Not yet explained.
+Before the exact monthly rescale, the model alone reaches R² = 0.994 against real ERA5 over Germany (`scripts/evaluation/prerescale_vs_postrescale_germany.py`); rescale trims RMSE by ~9% and forces the small remaining bias to exactly zero by construction:
 
-### 5. v3 and later carry an unvalidated-extrapolation caveat
+| | RMSE | bias | r | R² |
+|---|---|---|---|---|
+| Pre-rescale | 9.35 W/m² | +0.90 | 0.9971 | 0.9940 |
+| Post-rescale (Finding 1) | 8.54 W/m² | −0.00 | 0.9976 | 0.9950 |
 
-The training mask excludes cells south of 60°S and above 3000 m elevation. Predictions there are extrapolated by the model, not validated against held-out data specifically from those cells. The evaluation scripts that actually score v3/v4/v5 (`evaluate_v3_rescaled.py`, `evaluate_v4_vs_all.py`, `dart_winter_eval.py`) already apply this same mask when computing their statistics, so this doesn't contaminate any reported accuracy number. It did, however, go unflagged in the DART reconstruction's actual output data — `dart_reconstruct_year.py` now writes NaN for these cells (plus a `valid_training_region` flag) instead of an unflagged extrapolated number; this only applies to runs *after* that fix, not the 1950C/2080C output already on disk. Not relevant to this project's own domains either way — Germany and South Korea both sit well inside the trained region.
+The spatial version of this check (CV-fold held-out, Sep–Mar 2015–2026) shows exactly where it *isn't* excellent: R² = 0.987 across the entire region v3+ actually trains on, but **0.358** (bias −95 W/m²) over Antarctica and high mountains — terrain no version has ever trained on, for any year or fold. Every reported accuracy number already excludes these cells (training mask: lat ≥ −60°, elevation ≤ 3000 m); DART output now flags them too (`valid_training_region`, NaN instead of a silent extrapolated number — runs after that fix only). Not relevant to Germany or South Korea, both well inside the trained region.
+
+**Visual report**: [v5 Raw vs Rescaled](https://claude.ai/artifact/Yb8k4qxYzs8wEBebFfU9cr) — full breakdown by region, with maps of where the raw model struggles (Himalaya, Antarctica, Andes).
+
+### 3. Neither headline number is inflated by training/test overlap
+
+The model trains and is scored on the same 2015–2026 window — checked directly, with CV-fold models that never saw the year being scored:
+
+| Region | v1 R² | v2 R² | v3area R² | **v4 R²** |
+|---|---|---|---|---|
+| Global | 0.836 | 0.831 | 0.835 | **0.993** |
+| Europe | 0.791 | 0.772 | 0.797 | **0.978** |
+| Korea | 0.748 | 0.730 | 0.751 | **0.978** |
+
+Globally, this confirms the accumulation-window fix (Finding 4) is a real, out-of-sample gain — though only for v4 by name; v5 differs solely in training months, so it's strong supporting evidence, not a literal v5 figure. For Germany specifically, the same held-out re-score reproduces Finding 1's SMARD number almost exactly: RMSE 8.5 W/m², R² = 0.995, r = 0.998 (`scripts/evaluation/heldout_germany_v4v5.py`). It also shows no degradation by year — RMSE and r are flat across every year 2015–2026, including fold3's 2023–2026 test years furthest from fold1's training start, which is the real version of the "train-on-a-subset, test-on-distant-years" distribution-shift check the Recommendations table used to ask for (see below).
+
+### 4. Two early bugs, both fixed, are why v1–v3 are superseded
+
+- **v1–v3 trained on the wrong accumulation window** — a 1-hour sum sampled every 3 hours, not DART's genuine 3-hour sum. Silent, because validation used the same wrong convention. v4 fixed it (`era5_3h_mean`); v5 is the same fix restricted to Sep–Mar.
+- **SMARD was resampled with a forward-looking bin** against ERA5's backward-looking fields. Fixing the convention alone raised the SMARD correlation from ~0.75 to ~0.97, before touching the model.
+
+### 5. One open question
+
+A genuine-3-hour ERA5 variant (`era5_true3h`, built by direct summation of hourly data) scores slightly worse against SMARD than the original 1-hour-sampled data, even after the SMARD fix. Not yet explained.
 
 ---
 
@@ -292,11 +308,11 @@ The training mask excludes cells south of 60°S and above 3000 m elevation. Pred
 
 | Scenario | Status | Recommendation |
 |----------|--------|-----------------|
-| **1950C** | Reconstruction finished (138/140 months; Feb/Mar 1952 inputs missing) | Closer to the training climate (2015–2025) — lower distribution-shift risk, but still an out-of-sample test with no direct ground truth. |
-| **2080C** | Reconstruction finished (91/91 months) | No ground truth exists for a future climate. Frame any result as *"under the assumption that today's cloud-to-irradiance physics holds"*, not as validated. |
-| **Both** | — | Cheap, concrete check before trusting either: train on a subset of ERA5 years, test on the years furthest away in time, as a proxy for temporal distribution-shift risk. Large skill degradation with distance = a real warning sign; little movement = actual supporting evidence, not just an assumption. |
-| **Both** | Not yet run | A spatial-resolution counterpart to the check above: coarsen ERA5's own 0.25° cloud fractions further (e.g. to ~1°) and see how much the fitted kt-relationship's skill degrades, as a proxy for whether training-resolution (~28 km) vs. application-resolution (~9 km) is a real risk here — the wind side already ran this exact style of test for z0 and got a small, quantified answer; solar hasn't yet. |
-| **Both** | — | Done: Germany combined CF and Mockert events for 1950C and 2080C (real boundary, Mockert weights, corrected event rule) are in `dunkelflaute/results/` — see `report_dunkelflaute.html`, built by `dunkelflaute/scripts/dart/compute_germany_dunkelflaute_dart_mockert.py`. The older, superseded `dunkelflaute/scripts/compute_germany_combined_cf.py` has been removed (2026-10-01 repo cleanup). |
+| **Temporal distribution shift** | **Done** — Key Finding 3 | No longer an assumption: held-out fold models show flat RMSE and r across every year 2015–2026, with no degradation even at fold3's 2023–2026 years, furthest from fold1's training start. Supports trusting 1950C over 2080C (closer to the training climate), but this only tests *year-to-year* shift within the modern climate — not a shift in climate regime itself. |
+| **1950C** | Reconstruction finished (138/140 months; Feb/Mar 1952 inputs missing) | Lower risk than 2080C on the above basis, still an out-of-sample climate with no direct ground truth. |
+| **2080C** | Reconstruction finished (91/91 months) | No ground truth for a future climate — and Key Finding 2 now shows concretely what failure looks like when conditions leave the training distribution: R² collapses from 0.99 to 0.36 with a −95 W/m² bias over Antarctica/high mountains. The targeted check this motivates: whether 2080C's cloud/snow regime drifts toward combinations never seen in 2015–2026 ERA5, not just whether it sits inside the lat/elevation mask. Not yet run. Frame any 2080C result as *"under the assumption that today's cloud-to-irradiance physics holds,"* not as validated. |
+| **Both** | Not yet run | A spatial-resolution counterpart to Key Finding 2: coarsen ERA5's own 0.25° cloud fractions (e.g. to ~1°) and see how much skill degrades, as a proxy for training-resolution (~28 km) vs. application-resolution (~9 km) risk — the wind side already ran this exact test for z0 and got a small, quantified answer; solar hasn't yet. |
+| **Both** | **Done** | Germany combined CF and Mockert events for 1950C and 2080C (real boundary, Mockert weights, corrected event rule) are in `dunkelflaute/results/` — see `report_dunkelflaute.html`, built by `dunkelflaute/scripts/dart/compute_germany_dunkelflaute_dart_mockert.py`. |
 
 ---
 
@@ -311,7 +327,9 @@ solar/
 │   ├── training/       train_v1..v5_model.py, training diagnostics
 │   ├── evaluation/     score against ERA5/SMARD/DART; dart_reconstruct_year.py (production)
 │   └── plotting/       evaluation figures
-├── models/              model_v1/ .. model_v5/ (see models/README.md)
+├── models/              model_v1/ .. model_v5/, each with its own evaluation/ (saved .npz/.json
+│                        results — Germany checks included, e.g. heldout_germany_v5.npz) and,
+│                        from v2 on, cv_folds/ (the held-out models Key Findings 2/3 use)
 ├── reference/           OpenIFS TSIR source + call-chain notes
 ├── data/
 │   ├── era5/, era5_1h/, era5_3h_mean/    ERA5 downloads
@@ -322,10 +340,13 @@ solar/
 │   └── training_cache_*/                  cached features (regenerable)
 ├── jobs/                 SLURM sbatch scripts
 ├── reports/              write-ups (md/pdf)
-└── figures/               diagnostic and evaluation plots
+└── figures/               diagnostic and evaluation plots — figures/era5/ and figures/models/
+                           are a shared v1-v3-era bucket (left as historical record); v4 on,
+                           each version's figures get their own figures/model_vN_<topic>/
+                           subfolder (e.g. figures/model_v5_prerescale/)
 ```
 
-Every script `chdir`s to this `solar/` root on import (the `_root` snippet at the top of each file), so they run from anywhere; SLURM jobs in `jobs/` invoke them by their `scripts/<category>/` path.
+Every script `chdir`s to this `solar/` root on import (the `_root` snippet at the top of each file), so they run from anywhere; SLURM jobs in `jobs/` invoke them by their `scripts/<category>/` path. Nothing load-bearing for a documented Key Finding lives only in gitignored `scratch/` — if a one-off check's result ends up quoted in this README, promote the script into `scripts/evaluation/` and its output into the relevant `models/model_vN/evaluation/`, the way `heldout_germany_v4v5.py` and `prerescale_vs_postrescale_germany.py` were.
 
 ---
 
@@ -343,7 +364,7 @@ Every script `chdir`s to this `solar/` root on import (the `_root` snippet at th
 
 ### Known Data Quality Issues
 
-- **True-3h anomaly** (Finding 4 above) — unresolved, flagged rather than hidden.
+- **True-3h anomaly** (Finding 5 above) — unresolved, flagged rather than hidden.
 - **v3+ extrapolation caveat** — cells south of 60°S / above 3000 m are extrapolated, not validated.
 - **Untested cross-resolution transfer**: the model's being *pointwise* means it needs no regridding to run on DART's grid (see Grid Systems, above) — but that sidesteps, rather than answers, whether the relationship it learned actually holds at a different resolution. ERA5's cloud fractions at 0.25° are area averages over a much larger footprint (~28 km) than DART's ~9 km native cells; if the true cloud–clearness relationship is nonlinear in sub-grid cloud heterogeneity — plausible, since a partly-cloudy coarse cell and a genuinely overcast fine cell can share the same mean `tcc` but very different `kt` — a model fit on coarser, more-averaged ERA5 inputs could behave differently on DART's less-averaged fields. The wind side already ran this exact style of check for its own resolution mismatch (`wind/README.md`'s z0 coarsening sensitivity test, costed at ~0.2–0.25 m/s RMSE); no analogous test has been run for solar. See Recommendations, below.
 - **DART reconstruction is finished** (jobs complete) — `data/dart_reconstructed_1950c/` and `data/dart_reconstructed_2080c/` hold the results, one `<year>/` folder per year.

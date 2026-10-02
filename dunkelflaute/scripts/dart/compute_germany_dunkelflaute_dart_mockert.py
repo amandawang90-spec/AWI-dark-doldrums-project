@@ -49,8 +49,8 @@ RUNS = {
 }
 SOLAR_FILE = "ssrd_reduced_3h_{year}{month:02d}-{year}{month:02d}.nc"
 WIND_FILE = "u100v100_{year}{month:02d}.nc"
-LAND_PATH = "boundaries/land.geojson"
-EEZ_PATH = "boundaries/eez.geojson"
+LAND_PATH = "boundaries/germany/germany_land.geojson"
+EEZ_PATH = "boundaries/germany/germany_eez.geojson"
 RESULTS = "dunkelflaute/results"   # one subfolder per period: validation_era5_2015_2026 / 1950c / 2080c
 
 WEIGHTS = dict(solar=0.44, onshore=0.50, offshore=0.06)   # Mockert et al. (2023)

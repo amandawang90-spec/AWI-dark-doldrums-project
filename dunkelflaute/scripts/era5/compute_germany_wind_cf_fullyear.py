@@ -30,8 +30,8 @@ from core.capacity_factor import wind_cf, ONSHORE, OFFSHORE  # noqa: E402
 
 WIND_DIR = f"{_ROOT}/wind/data/era5/training_data"
 LSM_PATH = f"{_ROOT}/wind/data/era5/era5_lsm_20260830_0000.nc"
-LAND_PATH = f"{_ROOT}/boundaries/land.geojson"
-EEZ_PATH = f"{_ROOT}/boundaries/eez.geojson"
+LAND_PATH = f"{_ROOT}/boundaries/germany/germany_land.geojson"
+EEZ_PATH = f"{_ROOT}/boundaries/germany/germany_eez.geojson"
 OUT_PATH = f"{_ROOT}/dunkelflaute/data/germany_era5/wind_cf_era5_fullyear_2015_2026.npz"
 
 KAPPA, G, NU, ALPHA_CH = 0.4, 9.81, 1.5e-5, 0.018

@@ -55,8 +55,8 @@ SOLAR_DIR = f"{_ROOT}/solar/data/era5"
 WIND_DIR = f"{_ROOT}/wind/data/era5/training_data"
 LSM_PATH = f"{_ROOT}/wind/data/era5/era5_lsm_20260830_0000.nc"
 MODEL_PATH = f"{_ROOT}/solar/models/model_v3/area/model_kt_v3.joblib"
-LAND_PATH = f"{_ROOT}/boundaries/land.geojson"
-EEZ_PATH = f"{_ROOT}/boundaries/eez.geojson"
+LAND_PATH = f"{_ROOT}/boundaries/germany/germany_land.geojson"
+EEZ_PATH = f"{_ROOT}/boundaries/germany/germany_eez.geojson"
 
 DT_ERA5 = 3600.0          # ERA5 tsr/ssrd/tisr: 1h accumulation
 DAY_MU = 0.02

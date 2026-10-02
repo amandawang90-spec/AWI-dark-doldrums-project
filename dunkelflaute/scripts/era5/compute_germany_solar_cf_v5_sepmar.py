@@ -57,7 +57,7 @@ def box_slices(latlo, lathi, lonlo, lonhi):
 GERMANY_BBOX = dict(latlo=47.3, lathi=55.1, lonlo=5.9, lonhi=15.0)
 LAT_SL, LON_SL = box_slices(**GERMANY_BBOX)
 LSM_PATH = f"{_ROOT}/wind/data/era5/era5_lsm_20260830_0000.nc"
-LAND_PATH = f"{_ROOT}/boundaries/land.geojson"
+LAND_PATH = f"{_ROOT}/boundaries/germany/germany_land.geojson"
 
 
 def germany_land_mask():
